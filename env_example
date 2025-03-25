@@ -1,0 +1,8 @@
+TELEGRAM_TOKEN=your_TELEGRAM_TOKEN
+
+POSTGRES_USER=your_POSTGRES_USER
+POSTGRES_PASSWORD=your_POSTGRES_PASSWORD
+POSTGRES_DB=your_POSTGRES_DB
+
+# DB_LITE=sqlite+aiosqlite:///my_base.db
+DB_URL=postgresql+asyncpg://login:password@localhost:5432/db_name
