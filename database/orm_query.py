@@ -52,6 +52,17 @@ async def orm_create_categories(session: AsyncSession, categories: list):
     session.add_all([Category(name=name) for name in categories]) 
     await session.commit()
 
+async def orm_add_category(session: AsyncSession, category_name: str):
+    query = select(Category).where(Category.name == category_name)
+    result = await session.execute(query)
+    if result.first():
+        return False 
+
+    # Добавляем новую категорию
+    session.add(Category(name=category_name))
+    await session.commit()
+    return True  
+
 ############ Админка: добавить/изменить/удалить товар ########################
 
 async def orm_add_product(session: AsyncSession, data: dict):

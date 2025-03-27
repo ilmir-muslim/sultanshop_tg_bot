@@ -2,7 +2,6 @@ import math
 
 
 # Простой пагинатор
-#TODO посмотреть как будет выглядеть вывод нескольких товаров на странице
 class Paginator:
     def __init__(self, array: list | tuple, page: int=1, per_page: int=1):
         self.array = array

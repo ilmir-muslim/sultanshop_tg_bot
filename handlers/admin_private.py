@@ -6,6 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.orm_query import (
+    orm_add_category,
     orm_change_banner_image,
     orm_get_categories,
     orm_add_product,
@@ -43,7 +44,6 @@ async def admin_features(message: types.Message):
 @admin_router.message(F.text == 'Ассортимент')
 async def admin_features(message: types.Message, session: AsyncSession):
     categories = await orm_get_categories(session)
-    #TODO добавить кнопку "Добавить категорию"
     btns = {category.name : f'category_{category.id}' for category in categories}
     await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns))
 
@@ -121,6 +121,7 @@ class AddProduct(StatesGroup):
     name = State()
     description = State()
     category = State()
+    new_category = State()
     price = State()
     image = State()
 
@@ -239,6 +240,7 @@ async def add_description(message: types.Message, state: FSMContext, session: As
 
     categories = await orm_get_categories(session)
     btns = {category.name : str(category.id) for category in categories}
+    btns["Добавить категорию"] = "add_category"
     await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns))
     await state.set_state(AddProduct.category)
 
@@ -248,22 +250,45 @@ async def add_description2(message: types.Message, state: FSMContext):
     await message.answer("Вы ввели не допустимые данные, введите текст описания товара")
 
 
+@admin_router.callback_query(AddProduct.category, F.data == "add_category")
+async def add_new_category(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.answer("Введите название новой категории:")
+    await state.set_state(AddProduct.new_category)
+
+@admin_router.message(AddProduct.new_category, F.text)
+async def save_new_category(message: types.Message, state: FSMContext, session: AsyncSession):
+    category_name = message.text.strip()
+
+    success = await orm_add_category(session, category_name)
+    if success:
+        await message.answer(f"Категория '{category_name}' успешно добавлена!")
+    else:
+        await message.answer(f"Категория '{category_name}' уже существует.")
+
+    # Повторно выводим список категорий
+    categories = await orm_get_categories(session)
+    btns = {category.name: str(category.id) for category in categories}
+    btns["Добавить категорию"] = "add_category"
+    await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns))
+    await state.set_state(AddProduct.category)
+
 # Ловим callback выбора категории
 @admin_router.callback_query(AddProduct.category)
-async def category_choice(callback: types.CallbackQuery, state: FSMContext , session: AsyncSession):
+async def category_choice(callback: types.CallbackQuery, state: FSMContext, session: AsyncSession):
     if int(callback.data) in [category.id for category in await orm_get_categories(session)]:
         await callback.answer()
         await state.update_data(category=callback.data)
         await callback.message.answer('Теперь введите цену товара.')
         await state.set_state(AddProduct.price)
     else:
-        await callback.message.answer('Выберите катеорию из кнопок.')
+        await callback.message.answer('Выберите категорию из кнопок.')
         await callback.answer()
+
 
 #Ловим любые некорректные действия, кроме нажатия на кнопку выбора категории
 @admin_router.message(AddProduct.category)
 async def category_choice2(message: types.Message, state: FSMContext):
-    await message.answer("'Выберите катеорию из кнопок.'") 
+    await message.answer("'Выберите катеорию из кнопок, либо добавьте новую категорию'") 
 
 
 # Ловим данные для состояние price и потом меняем состояние на image
