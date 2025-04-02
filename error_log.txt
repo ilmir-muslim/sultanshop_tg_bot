@@ -1,0 +1,290 @@
+2025-04-02 17:39:56,098 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2025-04-02 17:39:56,098 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-04-02 17:39:56,099 INFO sqlalchemy.engine.Engine select current_schema()
+2025-04-02 17:39:56,099 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-04-02 17:39:56,100 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2025-04-02 17:39:56,100 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-04-02 17:39:56,100 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-04-02 17:39:56,102 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-02 17:39:56,102 INFO sqlalchemy.engine.Engine [generated in 0.00012s] ('banner', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-02 17:39:56,104 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-02 17:39:56,104 INFO sqlalchemy.engine.Engine [cached since 0.001428s ago] ('category', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-02 17:39:56,104 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-02 17:39:56,104 INFO sqlalchemy.engine.Engine [cached since 0.001764s ago] ('product', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-02 17:39:56,104 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-02 17:39:56,104 INFO sqlalchemy.engine.Engine [cached since 0.002087s ago] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-02 17:39:56,104 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-02 17:39:56,105 INFO sqlalchemy.engine.Engine [cached since 0.00237s ago] ('cart', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-02 17:39:56,105 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-02 17:39:56,105 INFO sqlalchemy.engine.Engine [cached since 0.002641s ago] ('order', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-02 17:39:56,105 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-02 17:39:56,105 INFO sqlalchemy.engine.Engine [cached since 0.002916s ago] ('order_item', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-02 17:39:56,106 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-04-02 17:39:56,106 INFO sqlalchemy.engine.Engine [generated in 0.00009s] ('order_status', 'pg_catalog')
+2025-04-02 17:39:56,106 INFO sqlalchemy.engine.Engine COMMIT
+2025-04-02 17:39:56,107 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-04-02 17:39:56,117 INFO sqlalchemy.engine.Engine SELECT category.id, category.name, category.created, category.updated 
+FROM category
+2025-04-02 17:39:56,117 INFO sqlalchemy.engine.Engine [generated in 0.00008s] ()
+2025-04-02 17:39:56,118 INFO sqlalchemy.engine.Engine SELECT banner.id, banner.name, banner.image, banner.description, banner.created, banner.updated 
+FROM banner
+2025-04-02 17:39:56,118 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ()
+2025-04-02 17:39:56,118 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-04-02 17:40:06,183 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-04-02 17:40:06,183 INFO sqlalchemy.engine.Engine SELECT banner.id, banner.name, banner.image, banner.description, banner.created, banner.updated 
+FROM banner 
+WHERE banner.name = $1::VARCHAR
+2025-04-02 17:40:06,183 INFO sqlalchemy.engine.Engine [generated in 0.00011s] ('main',)
+2025-04-02 17:40:06,659 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-04-02 17:40:09,339 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-04-02 17:40:09,339 INFO sqlalchemy.engine.Engine SELECT banner.id, banner.name, banner.image, banner.description, banner.created, banner.updated 
+FROM banner 
+WHERE banner.name = $1::VARCHAR
+2025-04-02 17:40:09,339 INFO sqlalchemy.engine.Engine [cached since 3.156s ago] ('main',)
+2025-04-02 17:40:09,576 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-04-02 17:40:11,056 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-04-02 17:40:11,058 INFO sqlalchemy.engine.Engine SELECT cart.id, cart.user_id, cart.product_id, cart.quantity, cart.created, cart.updated, product_1.id AS id_1, product_1.name, product_1.description, product_1.price, product_1.image, product_1.category_id, product_1.created AS created_1, product_1.updated AS updated_1 
+FROM cart LEFT OUTER JOIN product AS product_1 ON product_1.id = cart.product_id 
+WHERE cart.user_id = $1::BIGINT
+2025-04-02 17:40:11,058 INFO sqlalchemy.engine.Engine [generated in 0.00011s] (6903748145,)
+2025-04-02 17:40:11,321 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-04-02 17:40:13,216 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-04-02 17:40:13,217 INFO sqlalchemy.engine.Engine SELECT users.id, users.user_id, users.first_name, users.last_name, users.phone, users.address, users.latitude, users.longitude, users.created, users.updated 
+FROM users 
+WHERE users.user_id = $1::BIGINT
+2025-04-02 17:40:13,217 INFO sqlalchemy.engine.Engine [generated in 0.00010s] (6903748145,)
+2025-04-02 17:40:13,410 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-04-02 17:40:14,485 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-04-02 17:40:14,485 INFO sqlalchemy.engine.Engine SELECT users.id, users.user_id, users.first_name, users.last_name, users.phone, users.address, users.latitude, users.longitude, users.created, users.updated 
+FROM users 
+WHERE users.user_id = $1::BIGINT
+2025-04-02 17:40:14,485 INFO sqlalchemy.engine.Engine [cached since 1.268s ago] (6903748145,)
+2025-04-02 17:40:14,665 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-04-02 17:40:15,720 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-04-02 17:40:15,720 INFO sqlalchemy.engine.Engine SELECT users.id, users.user_id, users.first_name, users.last_name, users.phone, users.address, users.latitude, users.longitude, users.created, users.updated 
+FROM users 
+WHERE users.user_id = $1::BIGINT
+2025-04-02 17:40:15,720 INFO sqlalchemy.engine.Engine [cached since 2.503s ago] (6903748145,)
+2025-04-02 17:40:15,721 INFO sqlalchemy.engine.Engine SELECT cart.id, cart.user_id, cart.product_id, cart.quantity, cart.created, cart.updated 
+FROM cart 
+WHERE cart.user_id = $1::BIGINT
+2025-04-02 17:40:15,721 INFO sqlalchemy.engine.Engine [generated in 0.00009s] (6903748145,)
+2025-04-02 17:40:15,723 INFO sqlalchemy.engine.Engine SELECT product.id AS product_id, product.name AS product_name, product.description AS product_description, product.price AS product_price, product.image AS product_image, product.category_id AS product_category_id, product.created AS product_created, product.updated AS product_updated 
+FROM product 
+WHERE product.id = $1::INTEGER
+2025-04-02 17:40:15,723 INFO sqlalchemy.engine.Engine [generated in 0.00009s] (1,)
+2025-04-02 17:40:15,723 INFO sqlalchemy.engine.Engine ROLLBACK
+Cause exception while process update id=734889709 by bot id=7443088052
+MissingGreenlet: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+Traceback (most recent call last):
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/dispatcher.py", line 309, in _process_update
+    response = await self.feed_update(bot, update, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/dispatcher.py", line 158, in feed_update
+    response = await self.update.wrap_outer_middleware(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/middlewares/error.py", line 25, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/middlewares/user_context.py", line 56, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/fsm/middleware.py", line 42, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/event/telegram.py", line 121, in trigger
+    return await wrapped_inner(event, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/middlewares/db.py", line 22, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/event/handler.py", line 43, in call
+    return await wrapped()
+           ^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/dispatcher.py", line 276, in _listen_update
+    return await self.propagate_event(update_type=update_type, event=event, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/router.py", line 146, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/router.py", line 141, in _wrapped
+    return await self._propagate_event(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        observer=observer, update_type=update_type, event=telegram_event, **data
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/router.py", line 174, in _propagate_event
+    response = await router.propagate_event(update_type=update_type, event=event, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/router.py", line 146, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/router.py", line 141, in _wrapped
+    return await self._propagate_event(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        observer=observer, update_type=update_type, event=telegram_event, **data
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/router.py", line 166, in _propagate_event
+    response = await observer.trigger(event, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/event/telegram.py", line 121, in trigger
+    return await wrapped_inner(event, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/aiogram/dispatcher/event/handler.py", line 43, in call
+    return await wrapped()
+           ^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/handlers/user_private.py", line 171, in confirm_address
+    new_order = await orm_create_order(
+                ^^^^^^^^^^^^^^^^^^^^^^^
+        session, callback.from_user.id, delivery_address, phone_number
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/database/orm_query.py", line 232, in orm_create_order
+    total_price = sum(item.product.price * item.quantity for item in cart_items)
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/database/orm_query.py", line 232, in <genexpr>
+    total_price = sum(item.product.price * item.quantity for item in cart_items)
+                      ^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/orm/attributes.py", line 566, in __get__
+    return self.impl.get(state, dict_)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/orm/attributes.py", line 1086, in get
+    value = self._fire_loader_callables(state, key, passive)
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/orm/attributes.py", line 1121, in _fire_loader_callables
+    return self.callable_(state, passive)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/orm/strategies.py", line 978, in _load_for_state
+    return self._emit_lazyload(
+           ~~~~~~~~~~~~~~~~~~~^
+        session,
+        ^^^^^^^^
+    ...<7 lines>...
+        execution_options,
+        ^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/orm/strategies.py", line 1079, in _emit_lazyload
+    return loading.load_on_pk_identity(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session,
+        ^^^^^^^^
+    ...<3 lines>...
+        execution_options=execution_options,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/orm/loading.py", line 694, in load_on_pk_identity
+    session.execute(
+    ~~~~~~~~~~~~~~~^
+        q,
+        ^^
+    ...<2 lines>...
+        bind_arguments=bind_arguments,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self,
+        ^^^^^
+    ...<4 lines>...
+        conn,
+        ^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1843, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise exc_info[1].with_traceback(exc_info[2])
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 942, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 580, in execute
+    self._adapt_connection.await_(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self._prepare_and_execute(operation, parameters)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ilmir/dev_code/sultanshop_tg_bot/venv/lib/python3.13/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 123, in await_only
+    raise exc.MissingGreenlet(
+    ...<2 lines>...
+    )
+sqlalchemy.exc.MissingGreenlet: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+Received SIGINT signal
+бот лег

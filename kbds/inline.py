@@ -1,5 +1,5 @@
 from aiogram.filters.callback_data import CallbackData
-from aiogram.types import InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
@@ -16,9 +16,8 @@ def get_user_main_btns(*, level: int, sizes: tuple[int] = (2,)):
     btns = {
         "Товары 🏪": "catalog",
         "Корзина 🛒": "cart",
+        "Контакты 📞": "contacts",
         "О нас ℹ️": "about",
-        "Оплата 💰": "payment",
-        "Доставка 🛵": "shipping",
     }
     for text, menu_name in btns.items():
         if menu_name == 'catalog':
@@ -123,8 +122,10 @@ def get_user_cart(
         row2 = [
         InlineKeyboardButton(text='На главную 🏠',
                     callback_data=MenuCallBack(level=0, menu_name='main').pack()),
-        InlineKeyboardButton(text='Заказать',
-                    callback_data=MenuCallBack(level=0, menu_name='order').pack()),
+        InlineKeyboardButton(
+            text='Оформить заказ 📦',
+            callback_data="make_order" 
+        )
         ]
         return keyboard.row(*row2).as_markup()
     else:
@@ -143,3 +144,47 @@ def get_callback_btns(*, btns: dict[str, str], sizes: tuple[int] = (2,)):
 
 
     return keyboard.adjust(*sizes).as_markup()
+
+phone_confirm_kb = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="✅ Подтвердить", callback_data="confirm_phone"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="✏ Ввести другой", callback_data="change_phone"
+                    )
+                ],
+            ]
+        )
+
+address_confirm_kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Подтвердить", callback_data="confirm_address"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="✏ Ввести другой", callback_data="change_address"
+                )
+            ],
+        ]
+    )
+
+# def create_order_menu_btns(*, level: int):
+#     keyboard = InlineKeyboardBuilder()
+
+#     keyboard.add(InlineKeyboardButton(text='На главную 🏠',
+#                 callback_data=MenuCallBack(level=0, menu_name='main').pack()))
+#     keyboard.add(InlineKeyboardButton(text='Назад',
+#                 callback_data=MenuCallBack(level=level-1, menu_name='main').pack()))
+#     keyboard.add(InlineKeyboardButton(text="Оплата 💰",
+#                 callback_data=MenuCallBack(level=level, menu_name='payment').pack()))
+#     keyboard.add(InlineKeyboardButton(text="Доставка 🛵",
+#                 callback_data=MenuCallBack(level=level, menu_name='shipping').pack()))
+
+#     return keyboard.as_markup()

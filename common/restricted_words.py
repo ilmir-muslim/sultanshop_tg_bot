@@ -1,1 +1,1 @@
-restricted_words = {"кабан", "хомяк", "выхухоль"}
+restricted_words = {}
