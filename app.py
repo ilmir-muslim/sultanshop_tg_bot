@@ -27,6 +27,7 @@ bot = Bot(
     token=os.getenv("TELEGRAM_TOKEN"),
     default=DefaultBotProperties(parse_mode=ParseMode.HTML),
 )
+
 if os.path.exists("admins.json"):
     with open("admins.json", "r", encoding="utf-8") as file:
         admin_list = json.load(file)

@@ -1,5 +1,6 @@
 from aiogram import F, Router, types
 from aiogram.filters import Command, StateFilter, or_f
+from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
@@ -12,14 +13,16 @@ from database.orm_query import (
     orm_add_product,
     orm_delete_product,
     orm_get_info_pages,
+    orm_get_orders,
     orm_get_product,
     orm_get_products,
     orm_update_product,
 )
 
+from filters.callback_filters import StatusCallback
 from filters.chat_types import ChatTypeFilter, IsAdmin
 
-from kbds.inline import get_callback_btns
+from kbds.inline import get_callback_btns, get_status_keyboard
 from kbds.reply import get_keyboard
 
 
@@ -27,10 +30,12 @@ admin_router = Router()
 admin_router.message.filter(ChatTypeFilter(["private"]), IsAdmin())
 
 
+
 ADMIN_KB = get_keyboard(
     "Добавить товар",
     "Ассортимент",
     "Добавить/Изменить баннер",
+    "Заказы",
     placeholder="Выберите действие",
     sizes=(2,),
 )
@@ -346,3 +351,28 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
 @admin_router.message(AddProduct.image)
 async def add_image2(message: types.Message, state: FSMContext):
     await message.answer("Отправьте фото пищи")
+
+@admin_router.message(F.text == 'Заказы')
+async def orders(message: types.Message):
+    await message.answer(
+        "Выберите статус заказа",
+        reply_markup=get_status_keyboard(),
+    )
+
+@admin_router.callback_query(StatusCallback.filter())
+async def handle_status_callback(callback: types.CallbackQuery, callback_data: dict, session: AsyncSession):
+    status = callback_data.value
+    orders = await orm_get_orders(session, status=status)
+
+    for order in orders:
+        await callback.message.answer(
+            f"📦 Заказ №{order.id}\n"
+            f"👤 Покупатель: {order.user.first_name} {order.user.last_name}\n"
+            f"📞 Телефон: {order.user.phone or 'Телефон не указан'}\n"
+            f"📍 Адрес доставки: {order.delivery_address}\n"
+            f"💰 Общая стоимость: {order.total_price} руб.\n"
+            f"📋 Статус: {order.status}\n"
+            f"🕒 Дата создания: {order.created.strftime('%d.%m.%Y %H:%M')}\n"
+)
+
+    await callback.answer()

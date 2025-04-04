@@ -45,8 +45,6 @@ class User(Base):
     last_name: Mapped[str]  = mapped_column(String(150), nullable=True)
     phone: Mapped[str]  = mapped_column(String(13), nullable=True)
     address: Mapped[str]  = mapped_column(String(150), nullable=True)
-    latitude: Mapped[float] = mapped_column(Float, nullable=True) 
-    longitude: Mapped[float] = mapped_column(Float, nullable=True)  
 
 
 
@@ -67,10 +65,8 @@ class Order(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     delivery_address: Mapped[str] = mapped_column(Text, nullable=False)
-    latitude: Mapped[float] = mapped_column(Float, nullable=True)  # Широта
-    longitude: Mapped[float] = mapped_column(Float, nullable=True) 
     total_price: Mapped[float] = mapped_column(Numeric(5,2), nullable=False)
-    status: Mapped[str] = mapped_column(Enum("Подтвержден", "Неподтвержден", "Выполнен", name="order_status"), nullable=False)
+    status: Mapped[str] = mapped_column(String(150))
     created: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
     updated: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 

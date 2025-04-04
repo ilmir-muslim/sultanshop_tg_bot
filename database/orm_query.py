@@ -1,7 +1,7 @@
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 from database.models import Banner, Cart, Category, Order, OrderItem, Product, User
 
@@ -218,6 +218,8 @@ async def orm_reduce_product_in_cart(
         await session.commit()
         return False
 
+######################## Работа с заказами #######################################
+
 
 async def orm_create_order(session: AsyncSession, user_id: int, delivery_address: str, phone_number: str):
     # Извлекаем содержимое корзины пользователя
@@ -236,7 +238,7 @@ async def orm_create_order(session: AsyncSession, user_id: int, delivery_address
         user_id=user_id,
         delivery_address=delivery_address,
         total_price=total_price,
-        status="Неподтвержден",
+        status="оформлен",
     )
     session.add(new_order)
     await session.flush()  # Получаем ID нового заказа
@@ -256,3 +258,26 @@ async def orm_create_order(session: AsyncSession, user_id: int, delivery_address
 
     await session.commit()
     return new_order
+
+
+async def orm_get_orders(session: AsyncSession, status: str = None):
+    query = (
+        select(Order)
+        .where(Order.status == status)
+        .options(
+            selectinload(Order.user),  # Предзагрузка данных пользователя
+            selectinload(Order.items).selectinload(OrderItem.product)  # Предзагрузка товаров
+        )
+    )
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+async def orm_update_order_status(session: AsyncSession, order_id: int, status: str):
+    query = (
+        update(Order)
+        .where(Order.id == order_id)
+        .values(status=status)
+    )
+    await session.execute(query)
+    await session.commit()

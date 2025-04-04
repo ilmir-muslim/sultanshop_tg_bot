@@ -1,6 +1,9 @@
+from aiogram.filters import callback_data
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+from filters.callback_filters import StatusCallback
 
 
 class MenuCallBack(CallbackData, prefix="menu"):
@@ -175,16 +178,25 @@ address_confirm_kb = InlineKeyboardMarkup(
         ]
     )
 
-# def create_order_menu_btns(*, level: int):
-#     keyboard = InlineKeyboardBuilder()
+status_in_progress_kb = InlineKeyboardButton(text="В работе", callback_data="status_in_progress")
 
-#     keyboard.add(InlineKeyboardButton(text='На главную 🏠',
-#                 callback_data=MenuCallBack(level=0, menu_name='main').pack()))
-#     keyboard.add(InlineKeyboardButton(text='Назад',
-#                 callback_data=MenuCallBack(level=level-1, menu_name='main').pack()))
-#     keyboard.add(InlineKeyboardButton(text="Оплата 💰",
-#                 callback_data=MenuCallBack(level=level, menu_name='payment').pack()))
-#     keyboard.add(InlineKeyboardButton(text="Доставка 🛵",
-#                 callback_data=MenuCallBack(level=level, menu_name='shipping').pack()))
+status_completed_kb = InlineKeyboardButton(text="Выполнен", callback_data="status_completed")
 
-#     return keyboard.as_markup()
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+def get_status_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="оформлен", callback_data=StatusCallback(value="оформлен").pack()
+                ),
+                InlineKeyboardButton(
+                    text="в работе", callback_data=StatusCallback(value="в работе").pack()
+                ),
+                InlineKeyboardButton(
+                    text="выполнен", callback_data=StatusCallback(value="выполнен").pack()
+                ),
+            ]
+        ]
+    )

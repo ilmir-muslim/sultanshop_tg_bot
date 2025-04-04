@@ -1,4 +1,4 @@
-from aiogram import F, types, Router
+from aiogram import F, Bot, types, Router
 from aiogram.filters import CommandStart
 
 from aiogram.fsm.context import FSMContext
@@ -14,7 +14,7 @@ from database.orm_query import (
 
 from filters.chat_types import ChatTypeFilter
 from handlers.menu_processing import get_menu_content
-from kbds.inline import MenuCallBack, phone_confirm_kb, address_confirm_kb
+from kbds.inline import MenuCallBack, phone_confirm_kb, address_confirm_kb, status_in_progress_kb
 from kbds.reply import location_keyboard
 
 
@@ -35,8 +35,6 @@ async def start_cmd(message: types.Message, session: AsyncSession):
         media.media, caption=media.caption, reply_markup=reply_markup
     )
 
-
-# TODO при оформлении доставки добавить кнопку указать адрес доставки (добавить адрес в БД) + отправить свою геолокацию
 
 
 async def add_to_cart(
@@ -116,14 +114,13 @@ async def confirm_phone(
 
     if user.address:
         await callback.message.answer(
-            f"Ваш адрес: {user.address or 'Геолокация'}\nВы хотите его использовать?",
+            f"Ваш адрес: {user.address}\nВы хотите его использовать?",
             reply_markup=address_confirm_kb,
         )
         await state.set_state(OrderState.waiting_for_address)
     else:
         await callback.message.answer(
-            'Введите адрес доставки или отправьте геолокацию (или напишите "самовывоз"):',
-            reply_markup=location_keyboard,
+            'Введите адрес доставки или напишите "самовывоз":'
         )
         await state.set_state(OrderState.waiting_for_address)
 
@@ -145,8 +142,7 @@ async def process_phone_number(message: types.Message, state: FSMContext):
     await state.update_data(phone_number=phone_number)
 
     await message.answer(
-        'Введите адрес доставки или отправьте геолокацию (или напишите "самовывоз"):',
-        reply_markup=location_keyboard,
+        'Введите адрес доставки или напишите "самовывоз":'
     )
     await state.set_state(OrderState.waiting_for_address)
 
@@ -154,15 +150,13 @@ async def process_phone_number(message: types.Message, state: FSMContext):
 # 3. Подтверждение адреса или ввод нового
 @user_private_router.callback_query(F.data == "confirm_address")
 async def confirm_address(
-    callback: types.CallbackQuery, state: FSMContext, session: AsyncSession
+    callback: types.CallbackQuery, state: FSMContext, session: AsyncSession, bot: Bot
 ):
     data = await state.get_data()
     phone_number = data.get("phone_number")
 
     user = await orm_get_user(session, callback.from_user.id)
-    delivery_address = (
-        user.address if user.address else f"{user.latitude}, {user.longitude}"
-    )
+    delivery_address = user.address
 
     # Только теперь записываем адрес в state
     await state.update_data(delivery_address=delivery_address)
@@ -172,6 +166,23 @@ async def confirm_address(
         session, callback.from_user.id, delivery_address, phone_number
     )
 
+
+    order_details = (
+    f"📦 Новый заказ №{new_order.id}\n"
+    f"👤 Покупатель: {callback.from_user.first_name} {callback.from_user.last_name}\n"
+    f"📞 Телефон: {phone_number}\n"
+    f"📍 Адрес: {delivery_address}\n"
+    f"💰 Стоимость: {new_order.total_price} руб."
+    )
+
+    for admin_id in bot.my_admins_list:
+        try:
+            await bot.send_message(admin_id, order_details)
+        except Exception as e:
+            print(f"Не удалось отправить сообщение администратору {admin_id}: {e}")
+
+
+    
     await callback.message.answer(
         f"✅ Заказ №{new_order.id} создан!\n📞 Телефон: {phone_number}\n📍 Адрес: {delivery_address}\n💰 Стоимость: {new_order.total_price} руб."
     )
@@ -188,7 +199,7 @@ async def change_address(callback: types.CallbackQuery, state: FSMContext):
 
 @user_private_router.message(OrderState.waiting_for_address)
 async def process_address(
-    message: types.Message, state: FSMContext, session: AsyncSession
+    message: types.Message, state: FSMContext, session: AsyncSession, bot: Bot
 ):
     user = message.from_user
     data = await state.get_data()
@@ -212,14 +223,26 @@ async def process_address(
             "last_name": user.last_name,
             "phone": phone_number,
             "address": delivery_address,
-            "latitude": message.location.latitude if message.location else None,
-            "longitude": message.location.longitude if message.location else None,
         }
     )
 
 
     # Создаем заказ
     new_order = await orm_create_order(session, user_id, delivery_address, phone_number)
+
+    order_details = (
+    f"📦 Новый заказ №{new_order.id}\n"
+    f"👤 Покупатель: {message.from_user.first_name} {message.from_user.last_name}\n"
+    f"📞 Телефон: {phone_number}\n"
+    f"📍 Адрес: {delivery_address}\n"
+    f"💰 Стоимость: {new_order.total_price} EGP"
+    )
+
+    for admin_id in bot.my_admins_list:
+        try:
+            await bot.send_message(admin_id, order_details, reply_markup=status_in_progress_kb)
+        except Exception as e:
+            print(f"Не удалось отправить сообщение администратору {admin_id}: {e}")
 
     await message.answer(
         f"✅ Заказ №{new_order.id} создан!\n📞 Телефон: {phone_number}\n📍 Адрес: {delivery_address}\n💰 Стоимость: {new_order.total_price} руб."
