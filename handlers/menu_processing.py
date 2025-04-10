@@ -59,10 +59,15 @@ async def products(session, level, category, page):
     product = paginator.get_page()[0]
 
     image = InputMediaPhoto(
-        media=product.image,
-        caption=f"<strong>{product.name}\
-                </strong>\n{product.description}\nСтоимость: {round(product.price, 2)}\n\
-                <strong>Товар {paginator.page} из {paginator.pages}</strong>",
+        media=product.image, 
+        caption=f"<strong>{product.name}</strong>\n"
+                f"{product.description}\n"
+                f"Стоимость: {round(product.price, 2)}\n"
+                f"<strong>Товар {paginator.page} из {paginator.pages}</strong>\n"
+                f"<strong>Категория: {product.category.name}</strong>\n"
+                f"<strong>Продавец: {product.seller.name}</strong>\n"
+                f"<strong>Количество на складе: {product.quantity}</strong>\n", 
+        parse_mode="HTML" 
     )
 
     pagination_btns = pages(paginator)
@@ -114,11 +119,46 @@ async def carts(session, level, menu_name, page, user_id, product_id):
         total_price = round(
             sum(cart.quantity * cart.product.price for cart in carts), 2
         )
-        image = InputMediaPhoto(
-            media=cart.product.image,
-            caption=f"<strong>{cart.product.name}</strong>\n{cart.product.price}$ x {cart.quantity} = {cart_price}$\
-                    \nТовар {paginator.page} из {paginator.pages} в корзине.\nОбщая стоимость товаров в корзине {total_price}",
+        # Составляем табличку содержимого корзины
+        cart_summary_lines = ["Товар         Кол-во   Сумма", "-----------------------------"]
+        for c in carts:
+            name = c.product.name[:12].ljust(12)
+            qty = f"x{c.quantity}".ljust(7)
+            price = f"{round(c.product.price * c.quantity, 2)}£"
+            cart_summary_lines.append(f"{name}{qty}{price}")
+
+        cart_summary_text = "\n".join(cart_summary_lines)
+
+        # Собираем caption
+        caption = (
+        f"<strong>{cart.product.name}</strong>\n"
+        f"{cart.product.price}£ x {cart.quantity} = {cart_price}£\n"
+        f"Товар {paginator.page} из {paginator.pages} в корзине.\n\n"
+        f"📦 <u>Содержимое корзины:</u>\n"
+        f"<pre>{cart_summary_text}</pre>\n"
+        f"💰 <strong>Общая стоимость:</strong> {total_price}£"
         )
+
+        # Если caption слишком длинный — урезаем таблицу
+        if len(caption) > 1024:
+            cart_summary_text = "\n".join(cart_summary_lines[:5] + ["...и др."])
+            caption = (
+                f"<strong>{cart.product.name}</strong>\n"
+                f"{cart.product.price}£ x {cart.quantity} = {cart_price}£\n"
+                f"Товар {paginator.page} из {paginator.pages} в корзине.\n\n"
+                f"📦 <u>Содержимое корзины:</u>\n"
+                f"<pre>{cart_summary_text}</pre>\n"
+                f"💰 <strong>Общая стоимость:</strong> {total_price}£"
+            )
+
+
+        # Создаём image
+        image = InputMediaPhoto(
+        media=cart.product.image,
+        caption=caption,
+        parse_mode="HTML"
+        )
+
 
         pagination_btns = pages(paginator)
 

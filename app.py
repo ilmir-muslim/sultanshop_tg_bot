@@ -1,6 +1,7 @@
 import asyncio
 import os
 import json
+import logging
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.client.default import DefaultBotProperties
@@ -19,7 +20,17 @@ from handlers.user_group import user_group_router
 from handlers.admin_private import admin_router
 
 # from common.bot_cmds_list import private
+logging.basicConfig(
+    level=logging.DEBUG,  # Уровень логирования (можно изменить на DEBUG для более подробных логов)
+    format="%(asctime)s [%(levelname)s] %(message)s",  # Формат логов
+    handlers=[
+        logging.FileHandler("app.log", encoding="utf-8"),  # Логи сохраняются в файл app.log
+        logging.StreamHandler()  # Логи также выводятся в терминал
+    ]
+)
 
+# Пример использования логирования
+logging.info("Приложение запущено")
 
 # ALLOWED_UPDATES = ['message', 'edited_message', 'callback_query']
 

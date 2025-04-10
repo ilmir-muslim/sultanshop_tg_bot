@@ -32,9 +32,13 @@ class Product(Base):
     price: Mapped[float] = mapped_column(Numeric(5,2), nullable=False)
     image: Mapped[str] = mapped_column(String(150))
     category_id: Mapped[int] = mapped_column(ForeignKey('category.id', ondelete='CASCADE'), nullable=False)
+    seller_id: Mapped[int] = mapped_column(ForeignKey('sellers.id', ondelete='CASCADE'), nullable=True)
+    quantity: Mapped[int] = mapped_column(Integer, nullable=True, default=0)
 
     category: Mapped['Category'] = relationship(backref='product')
     order_items: Mapped[list['OrderItem']] = relationship(back_populates='product')
+    seller: Mapped['Seller'] = relationship(backref='product')
+
 
 class User(Base):
     __tablename__ = 'users'
@@ -45,6 +49,16 @@ class User(Base):
     last_name: Mapped[str]  = mapped_column(String(150), nullable=True)
     phone: Mapped[str]  = mapped_column(String(13), nullable=True)
     address: Mapped[str]  = mapped_column(String(150), nullable=True)
+
+
+class Seller(Base):
+    __tablename__ = 'sellers'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    phone: Mapped[str] = mapped_column(String(13), nullable=True)
+    address: Mapped[str] = mapped_column(String(150), nullable=True)
 
 
 

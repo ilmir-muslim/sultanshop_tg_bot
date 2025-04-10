@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload, selectinload
 
-from database.models import Banner, Cart, Category, Order, OrderItem, Product, User
+from database.models import Banner, Cart, Category, Order, OrderItem, Product, Seller, User
 
 
 ############### Работа с баннерами (информационными страницами) ###############
@@ -77,27 +77,44 @@ async def orm_add_category(session: AsyncSession, category_name: str):
 
 
 async def orm_add_product(session: AsyncSession, data: dict):
-    obj = Product(
+    new_product = Product(
         name=data["name"],
         description=data["description"],
+        category_id=int(data["category"]),
+        seller_id=int(data["seller"]),
+        quantity=int(data["quantity"]),
         price=float(data["price"]),
         image=data["image"],
-        category_id=int(data["category"]),
     )
-    session.add(obj)
+    session.add(new_product)
     await session.commit()
 
 
-async def orm_get_products(session: AsyncSession, category_id):
-    query = select(Product).where(Product.category_id == int(category_id))
-    result = await session.execute(query)
-    return result.scalars().all()
-
+from sqlalchemy.orm import selectinload
 
 async def orm_get_product(session: AsyncSession, product_id: int):
-    query = select(Product).where(Product.id == product_id)
+    query = (
+        select(Product)
+        .where(Product.id == product_id)
+        .options(
+            selectinload(Product.category)  # Предзагрузка категории
+        )
+    )
     result = await session.execute(query)
     return result.scalar()
+
+
+async def orm_get_products(session: AsyncSession, category_id: int):
+    query = (
+        select(Product)
+        .where(Product.category_id == category_id)
+        .options(
+            selectinload(Product.seller),  # Предзагрузка данных продавца
+            selectinload(Product.category)  # Предзагрузка данных категории
+        )
+    )
+    result = await session.execute(query)
+    return result.scalars().all()
 
 
 async def orm_update_product(session: AsyncSession, product_id: int, data):
@@ -107,9 +124,11 @@ async def orm_update_product(session: AsyncSession, product_id: int, data):
         .values(
             name=data["name"],
             description=data["description"],
+            category_id=int(data["category"]),
+            seller_id=int(data["seller"]),
+            quantity=int(data["quantity"]),
             price=float(data["price"]),
             image=data["image"],
-            category_id=int(data["category"]),
         )
     )
     await session.execute(query)
@@ -168,6 +187,29 @@ async def orm_update_user(session: AsyncSession, user_id: int, data: dict):
         query = update(User).where(User.user_id == user_id).values(**update_data)
         await session.execute(query)
         await session.commit()
+
+
+##################### работа с продавцами #####################################
+
+async def orm_get_sellers(session: AsyncSession):
+    query = select(Seller).where()
+    result = await session.execute(query)
+    return result.scalars().all()
+
+async def orm_add_seller(session: AsyncSession, name: str, description: str = None, phone: str = None, address: str = None):
+    existing_seller = await session.execute(select(Seller).where(Seller.name == name))
+    if existing_seller.scalar():
+        return False
+
+    new_seller = Seller(
+        name=name,
+        description=description,
+        phone=phone,
+        address=address,
+    )
+    session.add(new_seller)
+    await session.commit()
+    return True
 
 
 ######################## Работа с корзинами #######################################
