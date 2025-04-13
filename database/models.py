@@ -29,10 +29,11 @@ class Product(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
     description: Mapped[str] = mapped_column(Text)
+    purchase_price: Mapped[float] = mapped_column(Numeric(5,2), nullable=False)
     price: Mapped[float] = mapped_column(Numeric(5,2), nullable=False)
     image: Mapped[str] = mapped_column(String(150))
     category_id: Mapped[int] = mapped_column(ForeignKey('category.id', ondelete='CASCADE'), nullable=False)
-    seller_id: Mapped[int] = mapped_column(ForeignKey('sellers.id', ondelete='CASCADE'), nullable=True)
+    seller_id: Mapped[int] = mapped_column(ForeignKey('sellers.id', ondelete='CASCADE'), nullable=False, default=1)
     quantity: Mapped[int] = mapped_column(Integer, nullable=True, default=0)
 
     category: Mapped['Category'] = relationship(backref='product')

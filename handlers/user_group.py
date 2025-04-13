@@ -25,11 +25,11 @@ async def get_admins(message: types.Message, bot: Bot):
     chat_id = message.chat.id
     admins_list = await bot.get_chat_administrators(chat_id)
 
-    # Формируем новый список админов
+    # Формируем новый список админов, исключая ботов
     admins_list = [
         member.user.id
         for member in admins_list
-        if member.status in ["creator", "administrator"]
+        if member.status in ["creator", "administrator"] and not member.user.is_bot
     ]
 
     save_admins(admins_list)

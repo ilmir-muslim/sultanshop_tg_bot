@@ -83,6 +83,7 @@ async def orm_add_product(session: AsyncSession, data: dict):
         category_id=int(data["category"]),
         seller_id=int(data["seller"]),
         quantity=int(data["quantity"]),
+        purchase_price=float(data["purchase_price"]),
         price=float(data["price"]),
         image=data["image"],
     )
@@ -90,29 +91,31 @@ async def orm_add_product(session: AsyncSession, data: dict):
     await session.commit()
 
 
-from sqlalchemy.orm import selectinload
-
 async def orm_get_product(session: AsyncSession, product_id: int):
     query = (
         select(Product)
         .where(Product.id == product_id)
         .options(
-            selectinload(Product.category)  # Предзагрузка категории
+            selectinload(Product.category),
+            selectinload(Product.seller),
         )
     )
     result = await session.execute(query)
     return result.scalar()
 
 
-async def orm_get_products(session: AsyncSession, category_id: int):
-    query = (
-        select(Product)
-        .where(Product.category_id == category_id)
-        .options(
-            selectinload(Product.seller),  # Предзагрузка данных продавца
-            selectinload(Product.category)  # Предзагрузка данных категории
-        )
+
+async def orm_get_products(session: AsyncSession, category_id: int = None):
+    """
+    Получить список товаров. Если передан category_id, фильтрует по категории.
+    """
+    query = select(Product).options(
+        selectinload(Product.category),  # Предзагрузка данных категории
+        selectinload(Product.seller),    # Предзагрузка данных продавца
     )
+    if category_id is not None:
+        query = query.where(Product.category_id == category_id)
+    
     result = await session.execute(query)
     return result.scalars().all()
 
@@ -127,6 +130,7 @@ async def orm_update_product(session: AsyncSession, product_id: int, data):
             category_id=int(data["category"]),
             seller_id=int(data["seller"]),
             quantity=int(data["quantity"]),
+            purchase_price=float(data["purchase_price"]),
             price=float(data["price"]),
             image=data["image"],
         )
@@ -284,22 +288,31 @@ async def orm_create_order(session: AsyncSession, user_id: int, delivery_address
     )
     session.add(new_order)
     await session.flush()  # Получаем ID нового заказа
+    products_enough = True
+    order_items = []
+    deleted_items = []
+    for item in cart_items:
+        if item.product.quantity < item.quantity:
+            # Удаляем товар из корзины, если его недостаточно
+            await orm_delete_from_cart(session, user_id, item.product_id)
+            products_enough = False
+            deleted_items.append(item.product_id)
+            
+        else:
+            order_items.append(
+                OrderItem(
+                    order_id=new_order.id, product_id=item.product_id, quantity=item.quantity
+                )
+            )
+            item.product.quantity -= item.quantity
 
-    # Добавляем товары в заказ
-    order_items = [
-        OrderItem(
-            order_id=new_order.id, product_id=item.product_id, quantity=item.quantity
-        )
-        for item in cart_items
-    ]
     session.add_all(order_items)
-
     # Очищаем корзину
     delete_query = delete(Cart).where(Cart.user_id == user_id)
     await session.execute(delete_query)
 
     await session.commit()
-    return new_order
+    return new_order, products_enough, deleted_items
 
 
 async def orm_get_orders(session: AsyncSession, status: str = None):

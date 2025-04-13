@@ -8,7 +8,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import Category
+from database.models import Category, Seller
 from database.orm_query import (
     orm_add_category,
     orm_add_seller,
@@ -55,18 +55,24 @@ async def admin_features(message: types.Message):
 async def admin_features(message: types.Message, session: AsyncSession):
     categories = await orm_get_categories(session)
     btns = {category.name : f'category_{category.id}' for category in categories}
+    btns["показать все товары"] = "show_all_products"
     await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns))
 
-
-@admin_router.callback_query(F.data.startswith('category_'))
-async def starring_at_product(callback: types.CallbackQuery, session: AsyncSession):
-    category_id = callback.data.split('_')[-1]
-    for product in await orm_get_products(session, int(category_id)):
+@admin_router.callback_query(F.data == "show_all_products")
+async def show_all_products(callback: types.CallbackQuery, session: AsyncSession):
+    products = await orm_get_products(session)
+    for product in products:
         await callback.message.answer_photo(
             product.image,
-            caption=f"<strong>{product.name}\
-                    </strong>\n{product.description}\nСтоимость: {round(product.price, 2)}",
-            reply_markup=get_callback_btns(
+            caption=f"<strong>{product.name}</strong>\n"
+                f"<strong>{product.description}</strong>\n"
+                f"<strong>Закупочная цена: {round(product.purchase_price, 2)}</strong>\n"
+                f"<strong>Розничная цена: {round(product.price, 2)}</strong>\n"
+                f"<strong>Категория: {product.category.name}</strong>\n"
+                f"<strong>Продавец: {product.seller.name}</strong>\n"
+                f"<strong>Количество на складе: {product.quantity}</strong>\n", 
+        parse_mode="HTML",
+        reply_markup=get_callback_btns(
                 btns={
                     "Удалить": f"delete_{product.id}",
                     "Изменить": f"change_{product.id}",
@@ -75,7 +81,32 @@ async def starring_at_product(callback: types.CallbackQuery, session: AsyncSessi
             ),
         )
     await callback.answer()
-    await callback.message.answer("ОК, вот список товаров ⏫")
+
+
+@admin_router.callback_query(F.data.startswith('category_'))
+async def starring_at_product(callback: types.CallbackQuery, session: AsyncSession):
+    category_id = callback.data.split('_')[-1]
+    for product in await orm_get_products(session, int(category_id)):
+        await callback.message.answer_photo(
+            product.image,
+            caption=f"<strong>{product.name}</strong>\n"
+                f"<strong>{product.description}</strong>\n"
+                f"<strong>Закупочная цена: {round(product.purchase_price, 2)}</strong>\n"
+                f"<strong>Розничная цена: {round(product.price, 2)}</strong>\n"
+                f"<strong>Категория: {product.category.name}</strong>\n"
+                f"<strong>Продавец: {product.seller.name}</strong>\n"
+                f"<strong>Количество на складе: {product.quantity}</strong>\n", 
+        parse_mode="HTML",
+        reply_markup=get_callback_btns(
+                btns={
+                    "Удалить": f"delete_{product.id}",
+                    "Изменить": f"change_{product.id}",
+                },
+                sizes=(2,)
+            ),
+        )
+    await callback.answer()
+
 
 
 @admin_router.callback_query(F.data.startswith("delete_"))
@@ -139,6 +170,7 @@ class AddProduct(StatesGroup):
     image = State()
 
     product_for_change = None
+    #TODO сделать так, чтобы при изменении товара можно было выбрать нужный параметр для изменения
 
     texts = {
         "AddProduct:name": "Введите название заново:",
@@ -256,7 +288,7 @@ async def add_description(message: types.Message, state: FSMContext, session: As
     btns = {category.name : str(category.id) for category in categories}
     btns["Добавить категорию"] = "add_category"
     if AddProduct.product_for_change:
-        btns["пропустить"] = "skip"
+        btns["пропустить"] = "skip_category"
     await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns))
     await state.set_state(AddProduct.category)
 
@@ -286,25 +318,25 @@ async def save_new_category(message: types.Message, state: FSMContext, session: 
     btns = {category.name: str(category.id) for category in categories}
     btns["Добавить категорию"] = "add_category"
     if AddProduct.product_for_change:
-        btns["пропустить"] = "skip"
+        btns["пропустить"] = "skip_category"
     await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns))
     await state.set_state(AddProduct.category)
 
-@admin_router.message(AddProduct.category, F.data == "skip")
+@admin_router.message(AddProduct.category, F.data == "skip_category")
 async def skip_category(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(category=AddProduct.product_for_change.category.id)
 
 # Ловим callback выбора категории
 @admin_router.callback_query(AddProduct.category)
 async def category_choice(callback: types.CallbackQuery, state: FSMContext, session: AsyncSession):
-    if callback.data == "skip":
+    if callback.data == "skip_category":
         # Если пользователь выбрал "пропустить", оставляем категорию без изменений
         await state.update_data(category=AddProduct.product_for_change.category)
         sellers = await orm_get_sellers(session)
         btns = {seller.name: str(seller.id) for seller in sellers}
         btns["Добавить продавца"] = "add_seller"
         if AddProduct.product_for_change:
-            btns["пропустить"] = "skip"
+            btns["пропустить"] = "skip_seller"
         await callback.message.answer('Выберите продавца', reply_markup=get_callback_btns(btns=btns))
         await state.set_state(AddProduct.seller)
         return
@@ -326,16 +358,13 @@ async def category_choice(callback: types.CallbackQuery, state: FSMContext, sess
         btns = {seller.name: str(seller.id) for seller in sellers}
         btns["Добавить продавца"] = "add_seller"
         if AddProduct.product_for_change:
-            btns["пропустить"] = "skip"
+            btns["пропустить"] = "skip_seller"
         await callback.message.answer('Выберите продавца', reply_markup=get_callback_btns(btns=btns))
         await state.set_state(AddProduct.seller)
     else:
         await callback.message.answer('Используйте кнопки для выбора категории')
         await callback.answer()
 
-@admin_router.callback_query(AddProduct.seller, F.data == "skip")
-async def skip_seller(callback: types.CallbackQuery, state: FSMContext):
-    await state.update_data(seller=AddProduct.product_for_change.seller)
 
 #Ловим любые некорректные действия, кроме нажатия на кнопку выбора категории
 @admin_router.message(AddProduct.category)
@@ -394,7 +423,7 @@ async def save_new_seller(message: types.Message, state: FSMContext, session: As
 
 @admin_router.callback_query(AddProduct.seller)
 async def seller_choice(callback: types.CallbackQuery, state: FSMContext, session: AsyncSession):
-    if callback.data == "skip":
+    if callback.data == "skip_seller":
         # Если пользователь выбрал "пропустить", оставляем продавца без изменений
         await state.update_data(seller=AddProduct.product_for_change.seller)
         await callback.message.answer("Введите количество товара:")
@@ -441,22 +470,40 @@ async def add_quantity(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(quantity=quantity)
-    await message.answer("Введите стоимость товара:")
+    await message.answer("Введите введите закупочную цену и цену продажи через запятую в формате 10.5, 15.0:")
     await state.set_state(AddProduct.price)
 
 # Ловим данные для состояние price и потом меняем состояние на image
 @admin_router.message(AddProduct.price, F.text)
 async def add_price(message: types.Message, state: FSMContext):
     if message.text == "." and AddProduct.product_for_change:
-        await state.update_data(price=AddProduct.product_for_change.price)
+        await state.update_data(
+            price=AddProduct.product_for_change.price,
+            purchase_price=AddProduct.product_for_change.purchase_price,
+        )
     else:
         try:
-            float(message.text)
+            # Разделяем введённые значения по запятой
+            prices = message.text.split(",")
+            if len(prices) != 2:
+                raise ValueError("Ожидается два значения, разделённых запятой")
+
+            # Преобразуем значения в числа
+            purchase_price = float(prices[0].replace(",", ".").strip())
+            price = float(prices[1].replace(",", ".").strip())
+
+            if purchase_price <= 0 or price <= 0:
+                raise ValueError("Цены должны быть положительными числами")
         except ValueError:
-            await message.answer("Введите корректное значение цены")
+            await message.answer(
+                "Введите корректные значения цен в формате: закупочная, розничная\n"
+                "Например: 10.5, 15.0"
+            )
             return
 
-        await state.update_data(price=message.text)
+        # Сохраняем значения в состояние FSM
+        await state.update_data(purchase_price=purchase_price, price=price)
+
     await message.answer("Загрузите изображение товара")
     await state.set_state(AddProduct.image)
 
@@ -482,6 +529,8 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
     # Преобразуем объект Category в ID, если это объект
     if isinstance(data.get("category"), Category):
         data["category"] = data["category"].id
+    if isinstance(data.get("seller"), Seller):
+        data["seller"] = data["seller"].id
 
     logging.info(f"Данные для обновления/добавления товара: {data}")
 
@@ -531,7 +580,7 @@ async def handle_status_callback(callback: types.CallbackQuery, callback_data: d
             f"👤 Покупатель: {order.user.first_name} {order.user.last_name}\n"
             f"📞 Телефон: {order.user.phone or 'Телефон не указан'}\n"
             f"📍 Адрес доставки: {order.delivery_address}\n"
-            f"💰 Общая стоимость: {order.total_price} руб.\n"
+            f"💰 Общая стоимость: {order.total_price} £.\n"
             f"📋 Статус: {order.status}\n"
             f"🕒 Дата создания: {order.created.strftime('%d.%m.%Y %H:%M')}\n"
 )

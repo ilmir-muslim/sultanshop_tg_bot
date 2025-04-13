@@ -178,11 +178,6 @@ address_confirm_kb = InlineKeyboardMarkup(
         ]
     )
 
-status_in_progress_kb = InlineKeyboardButton(text="В работе", callback_data="status_in_progress")
-
-status_completed_kb = InlineKeyboardButton(text="Выполнен", callback_data="status_completed")
-
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 def get_status_keyboard():
     return InlineKeyboardMarkup(
@@ -197,6 +192,19 @@ def get_status_keyboard():
                 InlineKeyboardButton(
                     text="выполнен", callback_data=StatusCallback(value="выполнен").pack()
                 ),
+            ]
+        ]
+    )
+
+
+def one_button_kb(text: str, callback_data: str):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=text,
+                    callback_data=callback_data
+                )
             ]
         ]
     )

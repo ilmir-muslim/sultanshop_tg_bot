@@ -1,3 +1,4 @@
+from calendar import c
 from aiogram import F, Bot, types, Router
 from aiogram.filters import CommandStart
 
@@ -13,8 +14,13 @@ from database.orm_query import (
 )
 
 from filters.chat_types import ChatTypeFilter
-from handlers.menu_processing import get_menu_content
-from kbds.inline import MenuCallBack, phone_confirm_kb, address_confirm_kb, status_in_progress_kb
+from handlers.menu_processing import get_menu_content, main_menu
+from kbds.inline import (
+    MenuCallBack,
+    one_button_kb,
+    phone_confirm_kb,
+    address_confirm_kb,
+)
 from kbds.reply import location_keyboard
 
 
@@ -34,7 +40,6 @@ async def start_cmd(message: types.Message, session: AsyncSession):
     await message.answer_photo(
         media.media, caption=media.caption, reply_markup=reply_markup
     )
-
 
 
 async def add_to_cart(
@@ -90,7 +95,7 @@ async def make_order(
 
     if user and user.phone:
         # Если пользователь есть, предлагаем подтвердить номер
-        
+
         await callback.message.answer(
             f"Ваш номер телефона: {user.phone}\nВы хотите его использовать?",
             reply_markup=phone_confirm_kb,
@@ -125,7 +130,6 @@ async def confirm_phone(
         await state.set_state(OrderState.waiting_for_address)
 
 
-
 @user_private_router.callback_query(F.data == "change_phone")
 async def change_phone(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer("Введите новый номер телефона:")
@@ -141,9 +145,7 @@ async def process_phone_number(message: types.Message, state: FSMContext):
 
     await state.update_data(phone_number=phone_number)
 
-    await message.answer(
-        'Введите адрес доставки или напишите "самовывоз":'
-    )
+    await message.answer('Введите адрес доставки или напишите "самовывоз":')
     await state.set_state(OrderState.waiting_for_address)
 
 
@@ -162,38 +164,47 @@ async def confirm_address(
     await state.update_data(delivery_address=delivery_address)
 
     # Создаем заказ
-    new_order = await orm_create_order(
+    new_order, products_enough, deleted_items = await orm_create_order(
         session, callback.from_user.id, delivery_address, phone_number
     )
 
-
     order_details = (
-    f"📦 Новый заказ №{new_order.id}\n"
-    f"👤 Покупатель: {callback.from_user.first_name} {callback.from_user.last_name}\n"
-    f"📞 Телефон: {phone_number}\n"
-    f"📍 Адрес: {delivery_address}\n"
-    f"💰 Стоимость: {new_order.total_price} руб."
+        f"📦 Новый заказ №{new_order.id}\n"
+        f"👤 Покупатель: {callback.from_user.first_name} {callback.from_user.last_name}\n"
+        f"📞 Телефон: {phone_number}\n"
+        f"📍 Адрес: {delivery_address}\n"
+        f"💰 Стоимость: {new_order.total_price} £."
     )
 
     for admin_id in bot.my_admins_list:
         try:
-            await bot.send_message(admin_id, order_details)
+            await bot.send_message(
+                admin_id,
+                order_details,
+                reply_markup=one_button_kb(
+                    text="В работе", callback_data="status_in_progress"
+                ),
+            )
         except Exception as e:
             print(f"Не удалось отправить сообщение администратору {admin_id}: {e}")
 
-
-    
     await callback.message.answer(
-        f"✅ Заказ №{new_order.id} создан!\n📞 Телефон: {phone_number}\n📍 Адрес: {delivery_address}\n💰 Стоимость: {new_order.total_price} руб."
+        f"✅ Заказ №{new_order.id} создан!\n📞 Телефон: {phone_number}\n📍 Адрес: {delivery_address}\n💰 Стоимость: {new_order.total_price} £."
     )
+    if products_enough == False:
+        await bot.send_message(
+            f"некоторые товары были удалены из-за нехватки на складе: {deleted_items}, возможно кто-то купил последние пока вы оформляли заказ"
+        )
+
+    await callback.answer("Спасибо за ваш заказ!")
+    await main_menu(session, level=0, menu_name="main")
     await state.clear()
 
 
 @user_private_router.callback_query(F.data == "change_address")
 async def change_address(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer(
-        'Введите новый адрес или отправьте геолокацию (или напишите "самовывоз"):',
-        reply_markup=location_keyboard,
+        'Введите новый адрес или напишите "самовывоз"):',
     )
 
 
@@ -205,15 +216,11 @@ async def process_address(
     data = await state.get_data()
     phone_number = data.get("phone_number")
     user_id = message.from_user.id
-
-    if message.location:
-        delivery_address = f"{message.location.latitude}, {message.location.longitude}"
-    else:
-        delivery_address = message.text.strip()
+    delivery_address = message.text.strip()
 
     # Записываем адрес в state только после подтверждения или ввода
     await state.update_data(delivery_address=delivery_address)
-    
+
     # Обновляем данные пользователя
     await orm_update_user(
         session,
@@ -223,29 +230,42 @@ async def process_address(
             "last_name": user.last_name,
             "phone": phone_number,
             "address": delivery_address,
-        }
+        },
     )
 
-
     # Создаем заказ
-    new_order = await orm_create_order(session, user_id, delivery_address, phone_number)
+    new_order, products_enough, deleted_items = await orm_create_order(
+        session, user_id, delivery_address, phone_number
+    )
 
     order_details = (
-    f"📦 Новый заказ №{new_order.id}\n"
-    f"👤 Покупатель: {message.from_user.first_name} {message.from_user.last_name}\n"
-    f"📞 Телефон: {phone_number}\n"
-    f"📍 Адрес: {delivery_address}\n"
-    f"💰 Стоимость: {new_order.total_price} EGP"
+        f"📦 Новый заказ №{new_order.id}\n"
+        f"👤 Покупатель: {message.from_user.first_name} {message.from_user.last_name}\n"
+        f"📞 Телефон: {phone_number}\n"
+        f"📍 Адрес: {delivery_address}\n"
+        f"💰 Стоимость: {new_order.total_price} £"
     )
 
     for admin_id in bot.my_admins_list:
         try:
-            await bot.send_message(admin_id, order_details, reply_markup=status_in_progress_kb)
+            await bot.send_message(
+                admin_id,
+                order_details,
+                reply_markup=one_button_kb(
+                    text="В работе", callback_data="status_in_progress"
+                ),
+            )
         except Exception as e:
             print(f"Не удалось отправить сообщение администратору {admin_id}: {e}")
 
-    await message.answer(
-        f"✅ Заказ №{new_order.id} создан!\n📞 Телефон: {phone_number}\n📍 Адрес: {delivery_address}\n💰 Стоимость: {new_order.total_price} руб."
+    await message.message.answer(
+        f"✅ Заказ №{new_order.id} создан!\n📞 Телефон: {phone_number}\n📍 Адрес: {delivery_address}\n💰 Стоимость: {new_order.total_price} £."
     )
-    await state.clear()
+    if products_enough == False:
+        await bot.send_message(
+            f"некоторые товары были удалены из-за нехватки на складе: {deleted_items}, возможно кто-то купил последние пока вы оформляли заказ"
+        )
+    await message.answer("Спасибо за ваш заказ!")
+    await main_menu(session, level=0, menu_name="main")
 
+    await state.clear()

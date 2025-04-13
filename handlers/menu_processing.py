@@ -1,9 +1,10 @@
-from aiogram.types import InputMediaPhoto
+from aiogram.types import InlineKeyboardButton, InputMediaPhoto
+from aiogram import F, Router, types
+from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.orm_query import (
     orm_add_to_cart,
-    orm_create_order,
     orm_delete_from_cart,
     orm_get_banner,
     orm_get_categories,
@@ -13,6 +14,7 @@ from database.orm_query import (
 )
 from kbds.inline import (
     # create_order_menu_btns,
+    get_callback_btns,
     get_products_btns,
     get_user_cart,
     get_user_catalog_btns,
@@ -20,6 +22,9 @@ from kbds.inline import (
 )
 
 from utils.paginator import Paginator
+
+
+menu_progressing_router = Router()
 
 
 async def main_menu(session, level, menu_name):
@@ -59,15 +64,15 @@ async def products(session, level, category, page):
     product = paginator.get_page()[0]
 
     image = InputMediaPhoto(
-        media=product.image, 
+        media=product.image,
         caption=f"<strong>{product.name}</strong>\n"
-                f"{product.description}\n"
-                f"Стоимость: {round(product.price, 2)}\n"
-                f"<strong>Товар {paginator.page} из {paginator.pages}</strong>\n"
-                f"<strong>Категория: {product.category.name}</strong>\n"
-                f"<strong>Продавец: {product.seller.name}</strong>\n"
-                f"<strong>Количество на складе: {product.quantity}</strong>\n", 
-        parse_mode="HTML" 
+        f"{product.description}\n"
+        f"Стоимость: {round(product.price, 2)}\n"
+        f"<strong>Товар {paginator.page} из {paginator.pages}</strong>\n"
+        f"<strong>Категория: {product.category.name}</strong>\n"
+        f"<strong>Продавец: {product.seller.name}</strong>\n"
+        f"<strong>Количество на складе: {product.quantity}</strong>\n",
+        parse_mode="HTML",
     )
 
     pagination_btns = pages(paginator)
@@ -80,7 +85,46 @@ async def products(session, level, category, page):
         product_id=product.id,
     )
 
+    kbds.inline_keyboard.append(
+        [
+            InlineKeyboardButton(
+                text="📋 Показать все",
+                callback_data=f"show_all_in_category_{category}",  # Простая строка с категорией
+            )
+        ]
+    )
     return image, kbds
+
+
+@menu_progressing_router.callback_query(F.data.startswith("show_all_in_category_"))
+async def show_all_products(callback: CallbackQuery, session: AsyncSession):
+    category_id = int(callback.data.split("_")[-1])
+    products = await orm_get_products(session, category_id=category_id)
+
+    for product in products:
+        # Используем get_products_btns для создания клавиатуры
+        reply_markup = get_products_btns(
+            level=2,
+            category=category_id,
+            page=1,
+            pagination_btns={},
+            product_id=product.id,
+            sizes=(2, 1),
+        )
+
+        await callback.message.answer_photo(
+            product.image,
+            caption=f"<strong>{product.name}</strong>\n"
+            f"{product.description}\n"
+            f"Стоимость: {round(product.price, 2)}\n"
+            f"<strong>Категория: {product.category.name}</strong>\n"
+            f"<strong>Продавец: {product.seller.name}</strong>\n"
+            f"<strong>Количество на складе: {product.quantity}</strong>\n",
+            parse_mode="HTML",
+            reply_markup=reply_markup,
+        )
+
+    await callback.answer("Показаны все товары в категории.")
 
 
 async def carts(session, level, menu_name, page, user_id, product_id):
@@ -91,7 +135,7 @@ async def carts(session, level, menu_name, page, user_id, product_id):
     elif menu_name == "decrement":
         is_cart = await orm_reduce_product_in_cart(session, user_id, product_id)
         if page > 1 and not is_cart:
-            page -= 1
+            page-= 1
     elif menu_name == "increment":
         await orm_add_to_cart(session, user_id, product_id)
 
@@ -120,7 +164,10 @@ async def carts(session, level, menu_name, page, user_id, product_id):
             sum(cart.quantity * cart.product.price for cart in carts), 2
         )
         # Составляем табличку содержимого корзины
-        cart_summary_lines = ["Товар         Кол-во   Сумма", "-----------------------------"]
+        cart_summary_lines = [
+            "Товар         Кол-во   Сумма",
+            "-----------------------------",
+        ]
         for c in carts:
             name = c.product.name[:12].ljust(12)
             qty = f"x{c.quantity}".ljust(7)
@@ -131,12 +178,12 @@ async def carts(session, level, menu_name, page, user_id, product_id):
 
         # Собираем caption
         caption = (
-        f"<strong>{cart.product.name}</strong>\n"
-        f"{cart.product.price}£ x {cart.quantity} = {cart_price}£\n"
-        f"Товар {paginator.page} из {paginator.pages} в корзине.\n\n"
-        f"📦 <u>Содержимое корзины:</u>\n"
-        f"<pre>{cart_summary_text}</pre>\n"
-        f"💰 <strong>Общая стоимость:</strong> {total_price}£"
+            f"<strong>{cart.product.name}</strong>\n"
+            f"{cart.product.price}£ x {cart.quantity} = {cart_price}£\n"
+            f"Товар {paginator.page} из {paginator.pages} в корзине.\n\n"
+            f"📦 <u>Содержимое корзины:</u>\n"
+            f"<pre>{cart_summary_text}</pre>\n"
+            f"💰 <strong>Общая стоимость:</strong> {total_price}£"
         )
 
         # Если caption слишком длинный — урезаем таблицу
@@ -151,14 +198,10 @@ async def carts(session, level, menu_name, page, user_id, product_id):
                 f"💰 <strong>Общая стоимость:</strong> {total_price}£"
             )
 
-
         # Создаём image
         image = InputMediaPhoto(
-        media=cart.product.image,
-        caption=caption,
-        parse_mode="HTML"
+            media=cart.product.image, caption=caption, parse_mode="HTML"
         )
-
 
         pagination_btns = pages(paginator)
 
@@ -170,9 +213,6 @@ async def carts(session, level, menu_name, page, user_id, product_id):
         )
 
     return image, kbds
-
-
-
 
 
 async def get_menu_content(
@@ -192,3 +232,4 @@ async def get_menu_content(
         return await products(session, level, category, page)
     elif level == 3:
         return await carts(session, level, menu_name, page, user_id, product_id)
+ 
