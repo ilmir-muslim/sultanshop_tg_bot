@@ -1,3 +1,4 @@
+from aiogram.client import telegram
 from aiogram.types import InlineKeyboardButton, InputMediaPhoto
 from aiogram import F, Router, types
 from aiogram.types import CallbackQuery
@@ -215,6 +216,7 @@ async def carts(session, level, menu_name, page, user_id, product_id):
     return image, kbds
 
 
+
 async def get_menu_content(
     session: AsyncSession,
     level: int,
@@ -232,4 +234,5 @@ async def get_menu_content(
         return await products(session, level, category, page)
     elif level == 3:
         return await carts(session, level, menu_name, page, user_id, product_id)
+
  

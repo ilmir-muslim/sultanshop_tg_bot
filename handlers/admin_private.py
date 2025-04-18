@@ -29,6 +29,7 @@ from filters.chat_types import ChatTypeFilter, IsAdmin
 
 from kbds.inline import get_callback_btns, get_status_keyboard
 from kbds.reply import get_keyboard
+from utils.json_operations import save_added_goods
 
 
 admin_router = Router()
@@ -541,6 +542,7 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
         else:
             logging.info(f"Добавляем новый товар с данными: {data}")
             await orm_add_product(session, data)
+        save_added_goods(data)
         await message.answer("Товар добавлен/изменен", reply_markup=ADMIN_KB)
         await state.clear()
 

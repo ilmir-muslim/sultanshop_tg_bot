@@ -2,6 +2,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 
+
 def get_keyboard(
     *btns: str,
     placeholder: str = None,
@@ -46,3 +47,4 @@ location_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True,
     one_time_keyboard=True
 )
+

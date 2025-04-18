@@ -19,7 +19,6 @@ def get_user_main_btns(*, level: int, sizes: tuple[int] = (2,)):
     btns = {
         "Товары 🏪": "catalog",
         "Корзина 🛒": "cart",
-        "Контакты 📞": "contacts",
         "О нас ℹ️": "about",
     }
     for text, menu_name in btns.items():
@@ -208,3 +207,25 @@ def one_button_kb(text: str, callback_data: str):
             ]
         ]
     )
+
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+def change_product_kb(sizes: tuple[int] = (3, 2)):
+    buttons = [
+        InlineKeyboardButton(text="Название", callback_data="name"),
+        InlineKeyboardButton(text="Описание", callback_data="description"),
+        InlineKeyboardButton(text="Категория", callback_data="category"),
+        InlineKeyboardButton(text="Продавец", callback_data="seller"),
+        InlineKeyboardButton(text="Количество", callback_data="quantity"),
+        InlineKeyboardButton(text="Закупочная цена", callback_data="purchase_price"),
+        InlineKeyboardButton(text="Цена", callback_data="price"),
+        InlineKeyboardButton(text="Изображение", callback_data="image"),
+        InlineKeyboardButton(text="Отмена", callback_data="отмена"),
+    ]
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(*buttons)
+    return keyboard.adjust(*sizes).as_markup()

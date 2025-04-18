@@ -58,7 +58,7 @@ class Seller(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
-    phone: Mapped[str] = mapped_column(String(13), nullable=True)
+    phone: Mapped[str] = mapped_column(String(20), nullable=True)
     address: Mapped[str] = mapped_column(String(150), nullable=True)
 
 

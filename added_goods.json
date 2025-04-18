@@ -1,0 +1,12 @@
+[
+    {
+        "name": "чай имбирьный",
+        "description": "полезный прозрачный чай",
+        "category": 5,
+        "seller": 1,
+        "quantity": 15,
+        "purchase_price": 10.0,
+        "price": 15.0,
+        "image": "AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ"
+    }
+]

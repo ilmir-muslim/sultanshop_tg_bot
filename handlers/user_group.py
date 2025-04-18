@@ -7,6 +7,7 @@ from aiogram.filters import Command
 
 from filters.chat_types import ChatTypeFilter
 from common.restricted_words import restricted_words
+from utils.json_operations import save_admins
 
 
 user_group_router = Router()
@@ -15,10 +16,7 @@ user_group_router.edited_message.filter(ChatTypeFilter(["group", "supergroup"]))
 
 ADMIN_FILE = "admins.json"
 
-# Функция для сохранения списка админов в файл
-def save_admins(admins_list):
-    with open(ADMIN_FILE, "w", encoding="utf-8") as file:
-        json.dump(admins_list, file, ensure_ascii=False, indent=4)
+
 
 @user_group_router.message(Command("admin"))
 async def get_admins(message: types.Message, bot: Bot):
