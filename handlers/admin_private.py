@@ -171,7 +171,6 @@ class AddProduct(StatesGroup):
     image = State()
 
     product_for_change = None
-    #TODO сделать так, чтобы при изменении товара можно было выбрать нужный параметр для изменения
 
     texts = {
         "AddProduct:name": "Введите название заново:",
@@ -453,15 +452,16 @@ async def seller_choice(callback: types.CallbackQuery, state: FSMContext, sessio
 async def add_quantity(message: types.Message, state: FSMContext):
     if message.text == "." and AddProduct.product_for_change:
         await state.update_data(quantity=AddProduct.product_for_change.quantity)
-    else:
-        # Здесь можно сделать какую либо дополнительную проверку
-        # и выйти из хендлера не меняя состояние с отправкой соответствующего сообщения
-        # например:
-        if not message.text.isdigit() or int(message.text) <= 0:
-            await message.answer(
-                "Количество товара должно быть целым числом больше 0.\nВведите заново"
-            )
-            return
+        await message.answer("Введите закупочную цену и цену продажи через запятую в формате 10.5, 15.0:")
+        await state.set_state(AddProduct.price)
+        return
+    
+    if not message.text.isdigit() or int(message.text) <= 0:
+        await message.answer(
+            "Количество товара должно быть целым числом больше 0.\nВведите заново"
+        )
+        return
+    
     try:
         quantity = int(message.text)
         if quantity <= 0:
@@ -471,7 +471,7 @@ async def add_quantity(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(quantity=quantity)
-    await message.answer("Введите введите закупочную цену и цену продажи через запятую в формате 10.5, 15.0:")
+    await message.answer("Введите закупочную цену и цену продажи через запятую в формате 10.5, 15.0:")
     await state.set_state(AddProduct.price)
 
 # Ловим данные для состояние price и потом меняем состояние на image
@@ -542,7 +542,8 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
         else:
             logging.info(f"Добавляем новый товар с данными: {data}")
             await orm_add_product(session, data)
-        save_added_goods(data)
+            save_added_goods(data)
+            
         await message.answer("Товар добавлен/изменен", reply_markup=ADMIN_KB)
         await state.clear()
 

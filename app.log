@@ -7114,3 +7114,225 @@ FROM sellers
 2025-04-16 17:28:57,243 [INFO] [generated in 0.00014s] ('чай имбирьный', 'полезный прозрачный чай', 10.0, 15.0, 'AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ', 5, 1, 15)
 2025-04-16 17:28:57,244 [INFO] COMMIT
 2025-04-16 17:28:57,597 [INFO] Update id=423805044 is handled. Duration 357 ms by bot id=7974627539
+2025-04-19 16:17:51,267 [INFO] Приложение запущено
+2025-04-19 16:17:52,022 [DEBUG] Using selector: EpollSelector
+2025-04-19 16:17:53,251 [INFO] select pg_catalog.version()
+2025-04-19 16:17:53,251 [INFO] [raw sql] ()
+2025-04-19 16:17:53,279 [INFO] select current_schema()
+2025-04-19 16:17:53,279 [INFO] [raw sql] ()
+2025-04-19 16:17:53,280 [INFO] show standard_conforming_strings
+2025-04-19 16:17:53,280 [INFO] [raw sql] ()
+2025-04-19 16:17:53,281 [INFO] BEGIN (implicit)
+2025-04-19 16:17:53,283 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:17:53,283 [INFO] [generated in 0.00017s] ('banner', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:17:53,361 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:17:53,361 [INFO] [cached since 0.07814s ago] ('category', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:17:53,362 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:17:53,362 [INFO] [cached since 0.07905s ago] ('product', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:17:53,363 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:17:53,363 [INFO] [cached since 0.07955s ago] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:17:53,363 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:17:53,363 [INFO] [cached since 0.08003s ago] ('sellers', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:17:53,364 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:17:53,364 [INFO] [cached since 0.08041s ago] ('cart', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:17:53,364 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:17:53,364 [INFO] [cached since 0.08086s ago] ('order', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:17:53,364 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:17:53,364 [INFO] [cached since 0.08115s ago] ('order_item', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:17:53,365 [INFO] COMMIT
+2025-04-19 16:17:53,365 [INFO] BEGIN (implicit)
+2025-04-19 16:17:53,384 [INFO] SELECT category.id, category.name, category.created, category.updated 
+FROM category
+2025-04-19 16:17:53,384 [INFO] [generated in 0.00021s] ()
+2025-04-19 16:17:53,616 [INFO] SELECT banner.id, banner.name, banner.image, banner.description, banner.created, banner.updated 
+FROM banner
+2025-04-19 16:17:53,616 [INFO] [generated in 0.00016s] ()
+2025-04-19 16:17:53,671 [INFO] ROLLBACK
+2025-04-19 16:17:53,671 [INFO] Start polling
+2025-04-19 16:17:53,773 [INFO] Run polling for bot @testing_apps_ilmir_bot id=7974627539 - 'testing_apps'
+2025-04-19 16:18:16,996 [INFO] BEGIN (implicit)
+2025-04-19 16:18:16,996 [INFO] SELECT category.id, category.name, category.created, category.updated 
+FROM category
+2025-04-19 16:18:16,996 [INFO] [cached since 23.61s ago] ()
+2025-04-19 16:18:17,378 [INFO] ROLLBACK
+2025-04-19 16:18:17,378 [INFO] Update id=423805045 is handled. Duration 383 ms by bot id=7974627539
+2025-04-19 16:18:20,375 [INFO] BEGIN (implicit)
+2025-04-19 16:18:20,377 [INFO] SELECT product.id, product.name, product.description, product.purchase_price, product.price, product.image, product.category_id, product.seller_id, product.quantity, product.created, product.updated 
+FROM product 
+WHERE product.category_id = $1::INTEGER
+2025-04-19 16:18:20,377 [INFO] [generated in 0.00014s] (5,)
+2025-04-19 16:18:20,555 [INFO] SELECT sellers.id AS sellers_id, sellers.name AS sellers_name, sellers.description AS sellers_description, sellers.phone AS sellers_phone, sellers.address AS sellers_address, sellers.created AS sellers_created, sellers.updated AS sellers_updated 
+FROM sellers 
+WHERE sellers.id IN ($1::INTEGER)
+2025-04-19 16:18:20,556 [INFO] [generated in 0.00020s] (1,)
+2025-04-19 16:18:20,611 [INFO] SELECT category.id AS category_id, category.name AS category_name, category.created AS category_created, category.updated AS category_updated 
+FROM category 
+WHERE category.id IN ($1::INTEGER)
+2025-04-19 16:18:20,611 [INFO] [generated in 0.00025s] (5,)
+2025-04-19 16:18:21,230 [INFO] ROLLBACK
+2025-04-19 16:18:21,231 [INFO] Update id=423805046 is handled. Duration 857 ms by bot id=7974627539
+2025-04-19 16:18:22,586 [INFO] BEGIN (implicit)
+2025-04-19 16:18:22,587 [INFO] SELECT product.id, product.name, product.description, product.purchase_price, product.price, product.image, product.category_id, product.seller_id, product.quantity, product.created, product.updated 
+FROM product 
+WHERE product.id = $1::INTEGER
+2025-04-19 16:18:22,587 [INFO] [generated in 0.00013s] (3,)
+2025-04-19 16:18:22,588 [INFO] SELECT sellers.id AS sellers_id, sellers.name AS sellers_name, sellers.description AS sellers_description, sellers.phone AS sellers_phone, sellers.address AS sellers_address, sellers.created AS sellers_created, sellers.updated AS sellers_updated 
+FROM sellers 
+WHERE sellers.id IN ($1::INTEGER)
+2025-04-19 16:18:22,588 [INFO] [cached since 2.032s ago] (1,)
+2025-04-19 16:18:22,588 [INFO] SELECT category.id AS category_id, category.name AS category_name, category.created AS category_created, category.updated AS category_updated 
+FROM category 
+WHERE category.id IN ($1::INTEGER)
+2025-04-19 16:18:22,589 [INFO] [cached since 1.978s ago] (5,)
+2025-04-19 16:18:22,865 [INFO] ROLLBACK
+2025-04-19 16:18:22,866 [INFO] Update id=423805047 is handled. Duration 281 ms by bot id=7974627539
+2025-04-19 16:18:43,991 [INFO] Update id=423805048 is handled. Duration 137 ms by bot id=7974627539
+2025-04-19 16:18:45,848 [INFO] BEGIN (implicit)
+2025-04-19 16:18:45,848 [INFO] SELECT category.id, category.name, category.created, category.updated 
+FROM category
+2025-04-19 16:18:45,848 [INFO] [cached since 52.46s ago] ()
+2025-04-19 16:18:46,030 [INFO] ROLLBACK
+2025-04-19 16:18:46,031 [INFO] Update id=423805049 is handled. Duration 184 ms by bot id=7974627539
+2025-04-19 16:18:49,234 [INFO] BEGIN (implicit)
+2025-04-19 16:18:49,235 [INFO] SELECT sellers.id, sellers.name, sellers.description, sellers.phone, sellers.address, sellers.created, sellers.updated 
+FROM sellers
+2025-04-19 16:18:49,235 [INFO] [generated in 0.00011s] ()
+2025-04-19 16:18:49,402 [INFO] ROLLBACK
+2025-04-19 16:18:49,402 [INFO] Update id=423805050 is handled. Duration 168 ms by bot id=7974627539
+2025-04-19 16:18:50,876 [INFO] Update id=423805051 is handled. Duration 148 ms by bot id=7974627539
+2025-04-19 16:18:55,511 [INFO] Update id=423805052 is handled. Duration 204 ms by bot id=7974627539
+2025-04-19 16:19:01,003 [INFO] Update id=423805053 is handled. Duration 197 ms by bot id=7974627539
+2025-04-19 16:19:02,862 [INFO] Данные для обновления/добавления товара: {'name': 'чай имбирьный', 'description': 'полезный прозрачный чай', 'category': 5, 'seller': 1, 'quantity': 15, 'price': Decimal('15.00'), 'purchase_price': Decimal('10.00'), 'image': 'AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ'}
+2025-04-19 16:19:02,862 [INFO] Обновляем товар с ID 3 данными: {'name': 'чай имбирьный', 'description': 'полезный прозрачный чай', 'category': 5, 'seller': 1, 'quantity': 15, 'price': Decimal('15.00'), 'purchase_price': Decimal('10.00'), 'image': 'AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ'}
+2025-04-19 16:19:02,863 [INFO] BEGIN (implicit)
+2025-04-19 16:19:02,864 [INFO] UPDATE product SET name=$1::VARCHAR, description=$2::VARCHAR, purchase_price=$3::NUMERIC(5, 2), price=$4::NUMERIC(5, 2), image=$5::VARCHAR, category_id=$6::INTEGER, seller_id=$7::INTEGER, quantity=$8::INTEGER, updated=now() WHERE product.id = $9::INTEGER
+2025-04-19 16:19:02,864 [INFO] [generated in 0.00018s] ('чай имбирьный', 'полезный прозрачный чай', 10.0, 15.0, 'AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ', 5, 1, 15, 3)
+2025-04-19 16:19:03,047 [INFO] COMMIT
+2025-04-19 16:19:03,117 [ERROR] Ошибка при обновлении/добавлении товара: Object of type Decimal is not JSON serializable
+2025-04-19 16:19:03,305 [INFO] Update id=423805054 is handled. Duration 444 ms by bot id=7974627539
+2025-04-19 16:21:25,535 [INFO] Приложение запущено
+2025-04-19 16:21:25,541 [DEBUG] Using selector: EpollSelector
+2025-04-19 16:21:26,069 [INFO] select pg_catalog.version()
+2025-04-19 16:21:26,069 [INFO] [raw sql] ()
+2025-04-19 16:21:26,070 [INFO] select current_schema()
+2025-04-19 16:21:26,070 [INFO] [raw sql] ()
+2025-04-19 16:21:26,071 [INFO] show standard_conforming_strings
+2025-04-19 16:21:26,071 [INFO] [raw sql] ()
+2025-04-19 16:21:26,071 [INFO] BEGIN (implicit)
+2025-04-19 16:21:26,074 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:21:26,074 [INFO] [generated in 0.00016s] ('banner', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:21:26,075 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:21:26,076 [INFO] [cached since 0.001836s ago] ('category', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:21:26,076 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:21:26,076 [INFO] [cached since 0.002333s ago] ('product', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:21:26,076 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:21:26,077 [INFO] [cached since 0.00279s ago] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:21:26,077 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:21:26,077 [INFO] [cached since 0.003216s ago] ('sellers', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:21:26,077 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:21:26,077 [INFO] [cached since 0.003641s ago] ('cart', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:21:26,078 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:21:26,078 [INFO] [cached since 0.00406s ago] ('order', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:21:26,078 [INFO] SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-04-19 16:21:26,078 [INFO] [cached since 0.004437s ago] ('order_item', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-04-19 16:21:26,079 [INFO] COMMIT
+2025-04-19 16:21:26,079 [INFO] BEGIN (implicit)
+2025-04-19 16:21:26,099 [INFO] SELECT category.id, category.name, category.created, category.updated 
+FROM category
+2025-04-19 16:21:26,099 [INFO] [generated in 0.00016s] ()
+2025-04-19 16:21:26,101 [INFO] SELECT banner.id, banner.name, banner.image, banner.description, banner.created, banner.updated 
+FROM banner
+2025-04-19 16:21:26,101 [INFO] [generated in 0.00012s] ()
+2025-04-19 16:21:26,101 [INFO] ROLLBACK
+2025-04-19 16:21:26,102 [INFO] Start polling
+2025-04-19 16:21:26,187 [INFO] Run polling for bot @testing_apps_ilmir_bot id=7974627539 - 'testing_apps'
+2025-04-19 16:21:54,798 [INFO] BEGIN (implicit)
+2025-04-19 16:21:54,798 [INFO] SELECT category.id, category.name, category.created, category.updated 
+FROM category
+2025-04-19 16:21:54,798 [INFO] [cached since 28.7s ago] ()
+2025-04-19 16:21:55,397 [INFO] ROLLBACK
+2025-04-19 16:21:55,397 [INFO] Update id=423805055 is handled. Duration 600 ms by bot id=7974627539
+2025-04-19 16:21:56,528 [INFO] BEGIN (implicit)
+2025-04-19 16:21:56,530 [INFO] SELECT product.id, product.name, product.description, product.purchase_price, product.price, product.image, product.category_id, product.seller_id, product.quantity, product.created, product.updated 
+FROM product
+2025-04-19 16:21:56,530 [INFO] [generated in 0.00012s] ()
+2025-04-19 16:21:56,532 [INFO] SELECT category.id AS category_id, category.name AS category_name, category.created AS category_created, category.updated AS category_updated 
+FROM category 
+WHERE category.id IN ($1::INTEGER, $2::INTEGER)
+2025-04-19 16:21:56,532 [INFO] [generated in 0.00017s] (4, 5)
+2025-04-19 16:21:56,534 [INFO] SELECT sellers.id AS sellers_id, sellers.name AS sellers_name, sellers.description AS sellers_description, sellers.phone AS sellers_phone, sellers.address AS sellers_address, sellers.created AS sellers_created, sellers.updated AS sellers_updated 
+FROM sellers 
+WHERE sellers.id IN ($1::INTEGER)
+2025-04-19 16:21:56,534 [INFO] [generated in 0.00021s] (1,)
+2025-04-19 16:21:58,148 [INFO] ROLLBACK
+2025-04-19 16:21:58,148 [INFO] Update id=423805056 is handled. Duration 1621 ms by bot id=7974627539
+2025-04-19 16:22:06,014 [INFO] BEGIN (implicit)
+2025-04-19 16:22:06,015 [INFO] SELECT product.id, product.name, product.description, product.purchase_price, product.price, product.image, product.category_id, product.seller_id, product.quantity, product.created, product.updated 
+FROM product 
+WHERE product.id = $1::INTEGER
+2025-04-19 16:22:06,015 [INFO] [generated in 0.00013s] (3,)
+2025-04-19 16:22:06,016 [INFO] SELECT category.id AS category_id, category.name AS category_name, category.created AS category_created, category.updated AS category_updated 
+FROM category 
+WHERE category.id IN ($1::INTEGER)
+2025-04-19 16:22:06,016 [INFO] [cached since 9.485s ago] (5,)
+2025-04-19 16:22:06,017 [INFO] SELECT sellers.id AS sellers_id, sellers.name AS sellers_name, sellers.description AS sellers_description, sellers.phone AS sellers_phone, sellers.address AS sellers_address, sellers.created AS sellers_created, sellers.updated AS sellers_updated 
+FROM sellers 
+WHERE sellers.id IN ($1::INTEGER)
+2025-04-19 16:22:06,017 [INFO] [cached since 9.483s ago] (1,)
+2025-04-19 16:22:06,308 [INFO] ROLLBACK
+2025-04-19 16:22:06,308 [INFO] Update id=423805057 is handled. Duration 295 ms by bot id=7974627539
+2025-04-19 16:22:10,579 [INFO] Update id=423805058 is handled. Duration 188 ms by bot id=7974627539
+2025-04-19 16:22:11,493 [INFO] BEGIN (implicit)
+2025-04-19 16:22:11,493 [INFO] SELECT category.id, category.name, category.created, category.updated 
+FROM category
+2025-04-19 16:22:11,493 [INFO] [cached since 45.39s ago] ()
+2025-04-19 16:22:11,677 [INFO] ROLLBACK
+2025-04-19 16:22:11,677 [INFO] Update id=423805059 is handled. Duration 185 ms by bot id=7974627539
+2025-04-19 16:22:13,730 [INFO] BEGIN (implicit)
+2025-04-19 16:22:13,731 [INFO] SELECT sellers.id, sellers.name, sellers.description, sellers.phone, sellers.address, sellers.created, sellers.updated 
+FROM sellers
+2025-04-19 16:22:13,731 [INFO] [generated in 0.00011s] ()
+2025-04-19 16:22:13,897 [INFO] ROLLBACK
+2025-04-19 16:22:13,897 [INFO] Update id=423805060 is handled. Duration 168 ms by bot id=7974627539
+2025-04-19 16:22:15,114 [INFO] Update id=423805061 is handled. Duration 184 ms by bot id=7974627539
+2025-04-19 16:22:17,254 [INFO] Update id=423805062 is handled. Duration 227 ms by bot id=7974627539
+2025-04-19 16:22:19,081 [INFO] Update id=423805063 is handled. Duration 204 ms by bot id=7974627539
+2025-04-19 16:22:23,673 [INFO] Данные для обновления/добавления товара: {'name': 'чай имбирьный', 'description': 'полезный прозрачный чай', 'category': 5, 'seller': 1, 'quantity': 15, 'price': Decimal('15.00'), 'purchase_price': Decimal('10.00'), 'image': 'AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ'}
+2025-04-19 16:22:23,673 [INFO] Обновляем товар с ID 3 данными: {'name': 'чай имбирьный', 'description': 'полезный прозрачный чай', 'category': 5, 'seller': 1, 'quantity': 15, 'price': Decimal('15.00'), 'purchase_price': Decimal('10.00'), 'image': 'AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ'}
+2025-04-19 16:22:23,673 [INFO] BEGIN (implicit)
+2025-04-19 16:22:23,674 [INFO] UPDATE product SET name=$1::VARCHAR, description=$2::VARCHAR, purchase_price=$3::NUMERIC(5, 2), price=$4::NUMERIC(5, 2), image=$5::VARCHAR, category_id=$6::INTEGER, seller_id=$7::INTEGER, quantity=$8::INTEGER, updated=now() WHERE product.id = $9::INTEGER
+2025-04-19 16:22:23,675 [INFO] [generated in 0.00015s] ('чай имбирьный', 'полезный прозрачный чай', 10.0, 15.0, 'AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ', 5, 1, 15, 3)
+2025-04-19 16:22:23,676 [INFO] COMMIT
+2025-04-19 16:22:23,983 [INFO] Update id=423805064 is handled. Duration 311 ms by bot id=7974627539
