@@ -16,7 +16,7 @@ from middlewares.db import DataBaseSession
 from database.engine import create_db, drop_db, session_maker
 
 from handlers.user_private import user_private_router
-from handlers.user_group import user_group_router
+from handlers.user_group import send_random_item_periodically, user_group_router
 from handlers.admin_private import admin_router
 from handlers.menu_processing import menu_progressing_router
 
@@ -62,6 +62,7 @@ async def on_startup(bot):
 
     await create_db()
 
+    asyncio.create_task(send_random_item_periodically(session_maker, bot))
 
 async def on_shutdown(bot):
     print("бот лег")

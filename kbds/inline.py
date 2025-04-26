@@ -13,12 +13,24 @@ class MenuCallBack(CallbackData, prefix="menu"):
     page: int = 1
     product_id: int | None = None
 
+class plural_goods:
+    def __init__(self, count: int):
+        self.count = count
 
-def get_user_main_btns(*, level: int, sizes: tuple[int] = (2,)):
+    def __str__(self):
+        if self.count == 1:
+            return "товар"
+        elif 2 <= self.count <= 4:
+            return "товара"
+        else:
+            return "товаров"
+
+
+def get_user_main_btns(*, level: int, sizes: tuple[int] = (2,), quantity: int = 0):
     keyboard = InlineKeyboardBuilder()
     btns = {
         "Товары 🏪": "catalog",
-        "Корзина 🛒": "cart",
+        'Корзина 🛒' if quantity == 0 else f'В корзине 🛒 {quantity} {plural_goods(quantity)}': "cart",
         "О нас ℹ️": "about",
     }
     for text, menu_name in btns.items():
@@ -35,12 +47,12 @@ def get_user_main_btns(*, level: int, sizes: tuple[int] = (2,)):
     return keyboard.adjust(*sizes).as_markup()
 
 
-def get_user_catalog_btns(*, level: int, categories: list, sizes: tuple[int] = (2,)):
+def get_user_catalog_btns(*, level: int, categories: list, sizes: tuple[int] = (2,), quantity: int = 0):
     keyboard = InlineKeyboardBuilder()
 
     keyboard.add(InlineKeyboardButton(text='Назад',
                 callback_data=MenuCallBack(level=level-1, menu_name='main').pack()))
-    keyboard.add(InlineKeyboardButton(text='Корзина 🛒',
+    keyboard.add(InlineKeyboardButton(text='Корзина 🛒' if quantity == 0 else f'В корзине 🛒 {quantity} {plural_goods(quantity)}',
                 callback_data=MenuCallBack(level=3, menu_name='cart').pack()))
     
     for c in categories:
@@ -57,13 +69,14 @@ def get_products_btns(
     page: int,
     pagination_btns: dict,
     product_id: int,
-    sizes: tuple[int] = (2, 1)
+    sizes: tuple[int] = (2, 1),
+    quantity: int = 0
 ):
     keyboard = InlineKeyboardBuilder()
 
     keyboard.add(InlineKeyboardButton(text='Назад',
                 callback_data=MenuCallBack(level=level-1, menu_name='catalog').pack()))
-    keyboard.add(InlineKeyboardButton(text='Корзина 🛒',
+    keyboard.add(InlineKeyboardButton(text='Корзина 🛒' if quantity == 0 else f'В корзине 🛒 {quantity} {plural_goods(quantity)}',
                 callback_data=MenuCallBack(level=3, menu_name='cart').pack()))
     keyboard.add(InlineKeyboardButton(text='Купить 💵',
                 callback_data=MenuCallBack(level=level, menu_name='add_to_cart', product_id=product_id).pack()))
@@ -196,36 +209,32 @@ def get_status_keyboard():
     )
 
 
-def one_button_kb(text: str, callback_data: str):
+def one_button_kb(text: str, **kwargs):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
                     text=text,
-                    callback_data=callback_data
+                    **kwargs  # Передаем дополнительные аргументы
                 )
             ]
         ]
     )
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-
-def change_product_kb(sizes: tuple[int] = (3, 2)):
-    buttons = [
-        InlineKeyboardButton(text="Название", callback_data="name"),
-        InlineKeyboardButton(text="Описание", callback_data="description"),
-        InlineKeyboardButton(text="Категория", callback_data="category"),
-        InlineKeyboardButton(text="Продавец", callback_data="seller"),
-        InlineKeyboardButton(text="Количество", callback_data="quantity"),
-        InlineKeyboardButton(text="Закупочная цена", callback_data="purchase_price"),
-        InlineKeyboardButton(text="Цена", callback_data="price"),
-        InlineKeyboardButton(text="Изображение", callback_data="image"),
-        InlineKeyboardButton(text="Отмена", callback_data="отмена"),
-    ]
-    keyboard = InlineKeyboardBuilder()
-    keyboard.add(*buttons)
-    return keyboard.adjust(*sizes).as_markup()
+# def change_product_kb(sizes: tuple[int] = (3, 2)):
+#     buttons = [
+#         InlineKeyboardButton(text="Название", callback_data="name"),
+#         InlineKeyboardButton(text="Описание", callback_data="description"),
+#         InlineKeyboardButton(text="Категория", callback_data="category"),
+#         InlineKeyboardButton(text="Продавец", callback_data="seller"),
+#         InlineKeyboardButton(text="Количество", callback_data="quantity"),
+#         InlineKeyboardButton(text="Закупочная цена", callback_data="purchase_price"),
+#         InlineKeyboardButton(text="Цена", callback_data="price"),
+#         InlineKeyboardButton(text="Изображение", callback_data="image"),
+#         InlineKeyboardButton(text="Отмена", callback_data="отмена"),
+#     ]
+#     keyboard = InlineKeyboardBuilder()
+#     keyboard.add(*buttons)
+#     return keyboard.adjust(*sizes).as_markup()

@@ -1,0 +1,44 @@
+{
+    "buy:чай каркаде:2": {
+        "item": {
+            "name": "чай каркаде",
+            "description": "красный чай",
+            "category": 5,
+            "seller": 1,
+            "quantity": 10,
+            "purchase_price": 10.0,
+            "price": 15.0,
+            "image": "AgACAgIAAxkBAAICJ2f_zEAlNov-dQ1Fc5UwcbxPqGc1AAK47TEb1KX5Sx0V5Xf3FWj5AQADAgADeQADNgQ",
+            "id": 2
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:мышка:1": {
+        "item": {
+            "name": "мышка",
+            "description": "моя сломанная мышка",
+            "category": 4,
+            "seller": 1,
+            "quantity": 25,
+            "purchase_price": 15.3,
+            "price": 20.0,
+            "image": "AgACAgIAAxkBAAM_Z_swkFR_SqbXis2Oj4qi5dZIVQYAAkbsMRvvi9lLYTHhz4LJG8kBAAMCAAN5AAM2BA",
+            "id": 1
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:чай имбирьный:3": {
+        "item": {
+            "name": "чай имбирьный",
+            "description": "полезный прозрачный чай",
+            "category": 5,
+            "seller": 1,
+            "quantity": 15,
+            "purchase_price": 10.0,
+            "price": 15.0,
+            "image": "AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ",
+            "id": 3
+        },
+        "chat_id": -1002130857709
+    }
+}

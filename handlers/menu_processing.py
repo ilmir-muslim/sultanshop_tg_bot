@@ -1,6 +1,5 @@
-from aiogram.client import telegram
-from aiogram.types import InlineKeyboardButton, InputMediaPhoto
-from aiogram import F, Router, types
+from aiogram.types import InlineKeyboardButton, InputMediaPhoto, user
+from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,12 +9,12 @@ from database.orm_query import (
     orm_get_banner,
     orm_get_categories,
     orm_get_products,
+    orm_get_quantity_in_cart,
     orm_get_user_carts,
     orm_reduce_product_in_cart,
 )
 from kbds.inline import (
     # create_order_menu_btns,
-    get_callback_btns,
     get_products_btns,
     get_user_cart,
     get_user_catalog_btns,
@@ -28,21 +27,22 @@ from utils.paginator import Paginator
 menu_progressing_router = Router()
 
 
-async def main_menu(session, level, menu_name):
+async def main_menu(session, level, menu_name, user_id=None):
     banner = await orm_get_banner(session, menu_name)
     image = InputMediaPhoto(media=banner.image, caption=banner.description)
-
-    kbds = get_user_main_btns(level=level)
+    quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
+    kbds = get_user_main_btns(level=level, quantity=quantity)
 
     return image, kbds
 
 
-async def catalog(session, level, menu_name):
+async def catalog(session, level, menu_name, user_id=None):
     banner = await orm_get_banner(session, menu_name)
     image = InputMediaPhoto(media=banner.image, caption=banner.description)
 
     categories = await orm_get_categories(session)
-    kbds = get_user_catalog_btns(level=level, categories=categories)
+    quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
+    kbds = get_user_catalog_btns(level=level, categories=categories, quantity=quantity)
 
     return image, kbds
 
@@ -58,7 +58,7 @@ def pages(paginator: Paginator):
     return btns
 
 
-async def products(session, level, category, page):
+async def products(session, level, category, page, user_id=None):
     products = await orm_get_products(session, category_id=category)
 
     paginator = Paginator(products, page=page)
@@ -78,12 +78,14 @@ async def products(session, level, category, page):
 
     pagination_btns = pages(paginator)
 
+    quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
     kbds = get_products_btns(
         level=level,
         category=category,
         page=page,
         pagination_btns=pagination_btns,
         product_id=product.id,
+        quantity=quantity,
     )
 
     kbds.inline_keyboard.append(
@@ -101,7 +103,8 @@ async def products(session, level, category, page):
 async def show_all_products(callback: CallbackQuery, session: AsyncSession):
     category_id = int(callback.data.split("_")[-1])
     products = await orm_get_products(session, category_id=category_id)
-
+    user_id = callback.from_user.id
+    quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
     for product in products:
         # Используем get_products_btns для создания клавиатуры
         reply_markup = get_products_btns(
@@ -111,6 +114,7 @@ async def show_all_products(callback: CallbackQuery, session: AsyncSession):
             pagination_btns={},
             product_id=product.id,
             sizes=(2, 1),
+            quantity=quantity,
         )
 
         await callback.message.answer_photo(
@@ -142,6 +146,7 @@ async def carts(session, level, menu_name, page, user_id, product_id):
 
     carts = await orm_get_user_carts(session, user_id)
 
+
     if not carts:
         banner = await orm_get_banner(session, "cart")
         image = InputMediaPhoto(
@@ -161,19 +166,19 @@ async def carts(session, level, menu_name, page, user_id, product_id):
         cart = paginator.get_page()[0]
 
         cart_price = round(cart.quantity * cart.product.price, 2)
-        total_price = round(
-            sum(cart.quantity * cart.product.price for cart in carts), 2
-        )
+        total_price = round(sum(cart.quantity * cart.product.price for cart in carts), 2)
+        print(f"DEBUG: Общая сумма: {total_price}")
         # Составляем табличку содержимого корзины
         cart_summary_lines = [
-            "Товар         Кол-во   Сумма",
-            "-----------------------------",
+    "Товар        | Кол-во | Цена за шт. | Сумма",
+    "-----------------------------------------------",
         ]
-        for c in carts:
-            name = c.product.name[:12].ljust(12)
-            qty = f"x{c.quantity}".ljust(7)
-            price = f"{round(c.product.price * c.quantity, 2)}£"
-            cart_summary_lines.append(f"{name}{qty}{price}")
+    for c in carts:
+        name = c.product.name[:12].ljust(12)
+        qty = f"{c.quantity}".ljust(6)
+        price_per_unit = f"{c.product.price}£".ljust(10)
+        total = f"{c.quantity * c.product.price}£"
+        cart_summary_lines.append(f"{name} | {qty} | {price_per_unit} | {total}")
 
         cart_summary_text = "\n".join(cart_summary_lines)
 
@@ -227,11 +232,11 @@ async def get_menu_content(
     user_id: int | None = None,
 ):
     if level == 0:
-        return await main_menu(session, level, menu_name)
+        return await main_menu(session, level, menu_name, user_id)
     elif level == 1:
-        return await catalog(session, level, menu_name)
+        return await catalog(session, level, menu_name, user_id)
     elif level == 2:
-        return await products(session, level, category, page)
+        return await products(session, level, category, page, user_id)
     elif level == 3:
         return await carts(session, level, menu_name, page, user_id, product_id)
 

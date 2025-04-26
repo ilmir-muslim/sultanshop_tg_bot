@@ -1,9 +1,12 @@
 from calendar import c
+import logging
 from aiogram import F, Bot, types, Router
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandObject, CommandStart
+
 
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.utils.payload import decode_payload
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_query import (
     orm_add_to_cart,
@@ -21,7 +24,6 @@ from kbds.inline import (
     phone_confirm_kb,
     address_confirm_kb,
 )
-from kbds.reply import location_keyboard
 
 
 class OrderState(StatesGroup):
@@ -34,12 +36,54 @@ user_private_router.message.filter(ChatTypeFilter(["private"]))
 
 
 @user_private_router.message(CommandStart())
-async def start_cmd(message: types.Message, session: AsyncSession):
-    media, reply_markup = await get_menu_content(session, level=0, menu_name="main")
+async def start_cmd(
+    message: types.Message, session: AsyncSession, command: CommandObject
+):
+    try:
+        logging.info(f"Start command message: {message.text}")
+        logging.info(f"Start command args: {command.args}")
 
-    await message.answer_photo(
-        media.media, caption=media.caption, reply_markup=reply_markup
-    )
+        args = command.args  # безопасно брать из объекта команды
+        if args and args.startswith("add_to_cart_"):
+            try:
+                product_id = int(args.split("_")[-1])
+            except (IndexError, ValueError):
+                await message.answer("Некорректный параметр товара.")
+                return
+
+            user = message.from_user
+
+            # Добавляем пользователя и товар в корзину
+            await orm_add_user(
+                session,
+                user_id=user.id,
+                first_name=user.first_name,
+                last_name=user.last_name,
+                phone=None,
+            )
+
+            await orm_add_to_cart(session, user_id=user.id, product_id=product_id)
+            await message.answer("Товар добавлен в корзину")
+
+            user_id = message.from_user.id
+            media, reply_markup = await get_menu_content(
+                session, level=0, menu_name="main", user_id=user_id
+            )
+            await message.answer_photo(
+                media.media, caption=media.caption, reply_markup=reply_markup
+            )
+        else:
+            user_id = message.from_user.id
+            media, reply_markup = await get_menu_content(
+                session, level=0, menu_name="main", user_id=user_id
+            )
+            await message.answer_photo(
+                media.media, caption=media.caption, reply_markup=reply_markup
+            )
+
+    except Exception as e:
+        logging.error(f"Ошибка в start_cmd: {e}")
+        await message.answer("Произошла ошибка. Попробуйте позже.")
 
 
 async def add_to_cart(
@@ -195,9 +239,9 @@ async def confirm_address(
         await bot.send_message(
             f"некоторые товары были удалены из-за нехватки на складе: {deleted_items}, возможно кто-то купил последние пока вы оформляли заказ"
         )
-
+    user_id = callback.from_user.id
     await callback.answer("Спасибо за ваш заказ!")
-    await main_menu(session, level=0, menu_name="main")
+    await main_menu(session, level=0, menu_name="main", user_id=user_id)
     await state.clear()
 
 
@@ -265,7 +309,8 @@ async def process_address(
         await bot.send_message(
             f"некоторые товары были удалены из-за нехватки на складе: {deleted_items}, возможно кто-то купил последние пока вы оформляли заказ"
         )
+    user_id = message.from_user.id
     await message.answer("Спасибо за ваш заказ!")
-    await main_menu(session, level=0, menu_name="main")
+    await main_menu(session, level=0, menu_name="main", user_id=user_id)
 
     await state.clear()
