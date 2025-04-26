@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import hashlib
 import os
 from string import punctuation
 from datetime import datetime, time
@@ -26,8 +27,13 @@ from utils.json_operations import (
 
 
 class BuyCallbackData(CallbackData, prefix="buy"):
-    product_name: str
+    product_hash: str  # MD5 от названия (32 символа)
     product_id: int
+
+    @classmethod
+    def from_product(cls, product_name: str, product_id: int):
+        product_hash = hashlib.md5(product_name.encode()).hexdigest()
+        return cls(product_hash=product_hash, product_id=product_id)
 
 
 user_group_router = Router()
@@ -149,19 +155,18 @@ async def send_random_item_periodically(session_maker: async_sessionmaker, bot: 
                             session=session, product_name=random_item["name"]
                         )
 
-                        callback_data = BuyCallbackData(
+                        callback_data = BuyCallbackData.from_product(
                             product_name=random_item["name"],
                             product_id=random_item["id"],
                         ).pack()
 
                         save_callback_data(callback_data, random_item, chat_id)
                         logging.info(f"ID товара: {random_item['id']}")
-                        url = await create_start_link(bot, f"add_to_cart_{random_item['id']}")               
-                        logging.info(f"Сформированная ссылка: {url}")
-                        keyboard = one_button_kb(
-                            text="Купить",
-                            url=url
+                        url = await create_start_link(
+                            bot, f"add_to_cart_{random_item['id']}"
                         )
+                        logging.info(f"Сформированная ссылка: {url}")
+                        keyboard = one_button_kb(text="Купить", url=url)
 
                         await bot.send_photo(
                             chat_id=chat_id,
@@ -181,12 +186,3 @@ async def send_random_item_periodically(session_maker: async_sessionmaker, bot: 
         except Exception as e:
             logging.error(f"Критическая ошибка: {e}")
             await asyncio.sleep(60)
-
-
-
-
-
-
-
-
-
