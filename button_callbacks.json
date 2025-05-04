@@ -1,0 +1,54 @@
+{
+    "buy:aba69afbd99b1bde4b9e6fba45e687ed:3": {
+        "item": {
+            "id": 3,
+            "name": "чай имбирьный",
+            "description": "полезный прозрачный чай",
+            "category": 5,
+            "seller": 1,
+            "purchase_price": 10.0,
+            "price": 15.0,
+            "image": "AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:de31fe26f1f87369843c945b5af0d94a:4": {
+        "item": {
+            "id": 4,
+            "name": "товар с очень длинным названием например Копчёный сыр \"Косичка\"",
+            "description": "варвоарыва",
+            "category": 5,
+            "seller": 1,
+            "purchase_price": 10.0,
+            "price": 10.0,
+            "image": "AgACAgIAAxkBAAIC52gM76r62cKx0VQrGOINBObILadbAAJw7DEbjbFpSHBPTP85iZ4dAQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:802787f413c4b29a41e16de79d5241d4:2": {
+        "item": {
+            "id": 2,
+            "name": "чай каркаде",
+            "description": "красный чай",
+            "category": 5,
+            "seller": 1,
+            "purchase_price": 10.0,
+            "price": 15.0,
+            "image": "AgACAgIAAxkBAAICJ2f_zEAlNov-dQ1Fc5UwcbxPqGc1AAK47TEb1KX5Sx0V5Xf3FWj5AQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:ab20bd626b3eac5f90e79e543d1a9c57:1": {
+        "item": {
+            "id": 1,
+            "name": "мышка",
+            "description": "моя сломанная мышка",
+            "category": 4,
+            "seller": 1,
+            "purchase_price": 15.3,
+            "price": 20.0,
+            "image": "AgACAgIAAxkBAAM_Z_swkFR_SqbXis2Oj4qi5dZIVQYAAkbsMRvvi9lLYTHhz4LJG8kBAAMCAAN5AAM2BA"
+        },
+        "chat_id": -1002130857709
+    }
+}

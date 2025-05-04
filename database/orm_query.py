@@ -2,6 +2,7 @@ from sqlalchemy import func, select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload, selectinload
+from yarl import Query
 
 from database.models import (
     Banner,
@@ -12,6 +13,7 @@ from database.models import (
     Product,
     Seller,
     User,
+    WaitList,
 )
 
 
@@ -91,7 +93,6 @@ async def orm_add_product(session: AsyncSession, data: dict):
         description=data["description"],
         category_id=int(data["category"]),
         seller_id=int(data["seller"]),
-        quantity=int(data["quantity"]),
         purchase_price=float(data["purchase_price"]),
         price=float(data["price"]),
         image=data["image"],
@@ -121,6 +122,7 @@ async def orm_get_product_by_name(session: AsyncSession, product_name: str):
     return product_id
 
 
+
 async def orm_get_products(session: AsyncSession, category_id: int = None):
     """
     Получить список товаров. Если передан category_id, фильтрует по категории.
@@ -145,14 +147,41 @@ async def orm_update_product(session: AsyncSession, product_id: int, data):
             description=data["description"],
             category_id=int(data["category"]),
             seller_id=int(data["seller"]),
-            quantity=int(data["quantity"]),
             purchase_price=float(data["purchase_price"]),
             price=float(data["price"]),
             image=data["image"],
+            is_available=data["is_available"],
         )
     )
     await session.execute(query)
     await session.commit()
+
+
+async def orm_update_product_availability(
+    session: AsyncSession, product_id: int, is_available: bool
+):
+    query = (
+        update(Product)
+        .where(Product.id == product_id)
+        .values(is_available=is_available)
+    )
+    await session.execute(query)
+    await session.commit()
+    
+
+
+async def orm_check_product_available(session: AsyncSession, product_id: int) -> bool:
+    """
+    Проверяет, доступен ли продукт (is_available = True).
+
+    :param session: Сессия базы данных.
+    :param product_id: ID продукта.
+    :return: True, если продукт доступен, иначе False.
+    """
+    query = select(Product.is_available).where(Product.id == product_id)
+    result = await session.execute(query)
+    is_available = result.scalar()
+    return bool(is_available)
 
 
 async def orm_delete_product(session: AsyncSession, product_id: int):
@@ -287,13 +316,13 @@ async def orm_reduce_product_in_cart(
         await orm_delete_from_cart(session, user_id, product_id)
         await session.commit()
         return False
-    
+
 
 async def orm_get_quantity_in_cart(session: AsyncSession, user_id: int):
     query = select(func.sum(Cart.quantity)).where(Cart.user_id == user_id)
     result = await session.execute(query)
     total_quantity = result.scalar()
-    return total_quantity or 0 
+    return total_quantity or 0
 
 
 ######################## Работа с заказами #######################################
@@ -320,37 +349,18 @@ async def orm_create_order(
         user_id=user_id,
         delivery_address=delivery_address,
         total_price=total_price,
-        status="оформлен",
+        status="Ожидает",
     )
     session.add(new_order)
     await session.flush()  # Получаем ID нового заказа
-    products_enough = True
     order_items = []
     deleted_items = []
-    for item in cart_items:
-        if item.product.quantity < item.quantity:
-            # Удаляем товар из корзины, если его недостаточно
-            await orm_delete_from_cart(session, user_id, item.product_id)
-            products_enough = False
-            deleted_items.append(item.product_id)
-
-        else:
-            order_items.append(
-                OrderItem(
-                    order_id=new_order.id,
-                    product_id=item.product_id,
-                    quantity=item.quantity,
-                )
-            )
-            item.product.quantity -= item.quantity
-
     session.add_all(order_items)
     # Очищаем корзину
     delete_query = delete(Cart).where(Cart.user_id == user_id)
     await session.execute(delete_query)
-
     await session.commit()
-    return new_order, products_enough, deleted_items
+    return new_order, deleted_items
 
 
 async def orm_get_orders(session: AsyncSession, status: str = None):
@@ -368,7 +378,46 @@ async def orm_get_orders(session: AsyncSession, status: str = None):
     return result.scalars().all()
 
 
+async def orm_get_user_orders(session: AsyncSession, user_id: int):
+    query = (
+        select(Order)
+        .where(Order.user_id == user_id, Order.status.in_(["Ожидает", "В работе"]))
+        .options(joinedload(Order.items).joinedload(OrderItem.product))
+    )
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
 async def orm_update_order_status(session: AsyncSession, order_id: int, status: str):
     query = update(Order).where(Order.id == order_id).values(status=status)
     await session.execute(query)
     await session.commit()
+
+
+################# работа со списком заявок ################################
+
+
+async def orm_add_to_wait_list(session: AsyncSession, user_id: int, product_id: int):
+    """
+    Добавляет запись в таблицу WaitList.
+
+    :param session: Сессия базы данных.
+    :param user_id: ID пользователя.
+    :param product_id: ID продукта.
+    :return: True, если запись успешно добавлена, иначе False (если запись уже существует).
+    """
+    # Проверяем, существует ли уже запись в WaitList
+    query = select(WaitList).where(
+        WaitList.user_id == user_id, WaitList.product_id == product_id
+    )
+    result = await session.execute(query)
+    existing_entry = result.scalar()
+
+    if existing_entry:
+        return False  # Запись уже существует
+
+    # Создаем новую запись
+    new_wait_list_entry = WaitList(user_id=user_id, product_id=product_id)
+    session.add(new_wait_list_entry)
+    await session.commit()
+    return True

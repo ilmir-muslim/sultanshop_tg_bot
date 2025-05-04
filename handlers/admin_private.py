@@ -22,6 +22,7 @@ from database.orm_query import (
     orm_get_products,
     orm_get_sellers,
     orm_update_product,
+    orm_update_product_availability,
 )
 
 from filters.callback_filters import StatusCallback
@@ -34,7 +35,6 @@ from utils.json_operations import save_added_goods
 
 admin_router = Router()
 admin_router.message.filter(ChatTypeFilter(["private"]), IsAdmin())
-
 
 
 ADMIN_KB = get_keyboard(
@@ -52,62 +52,158 @@ async def admin_features(message: types.Message):
     await message.answer("Что хотите сделать?", reply_markup=ADMIN_KB)
 
 
-@admin_router.message(F.text == 'Ассортимент')
+@admin_router.message(F.text == "Ассортимент")
 async def admin_features(message: types.Message, session: AsyncSession):
     categories = await orm_get_categories(session)
-    btns = {category.name : f'category_{category.id}' for category in categories}
+    btns = {category.name: f"category_{category.id}" for category in categories}
     btns["показать все товары"] = "show_all_products"
-    await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns))
+    await message.answer(
+        "Выберите категорию", reply_markup=get_callback_btns(btns=btns)
+    )
+
+
+class ProductCard:
+    def __init__(self, product):
+        self.product = product
+
+    @property
+    def caption(self) -> str:
+        return (
+            f"<strong>{self.product.name}</strong>\n"
+            f"<strong>{self.product.description}</strong>\n"
+            f"<strong>Закупочная цена: {round(self.product.purchase_price, 2)}</strong>\n"
+            f"<strong>Розничная цена: {round(self.product.price, 2)}</strong>\n"
+            f"<strong>Категория: {self.product.category.name}</strong>\n"
+            f"<strong>Продавец: {self.product.seller.name}</strong>\n"
+            f"<strong>{'есть' if self.product.is_available else 'нет'} в наличии</strong>"
+        )
+
+    @property
+    def image(self):
+        return self.product.image
+
+    @property
+    def buttons(self) -> dict:
+        availability_text = (
+            "нет в наличии" if self.product.is_available else "есть в наличии"
+        )
+        availability_callback = (
+            f"available_{self.product.id}_false"
+            if self.product.is_available
+            else f"available_{self.product.id}_true"
+        )
+        return {
+            "Удалить": f"delete_{self.product.id}",
+            "Изменить": f"change_{self.product.id}",
+            availability_text: availability_callback,
+        }
+
 
 @admin_router.callback_query(F.data == "show_all_products")
 async def show_all_products(callback: types.CallbackQuery, session: AsyncSession):
     products = await orm_get_products(session)
+
     for product in products:
+        card = ProductCard(product)
+        # Сбор информации о товаре
+        # name = product.name
+        # description = product.description
+        # purchase_price = round(product.purchase_price, 2)
+        # price = round(product.price, 2)
+        # category = product.category.name
+        # seller = product.seller.name
+        # is_available = product.is_available
+        # availability_text = "есть в наличии" if is_available else "нет в наличии"
+        # availability_callback = (
+        #     f"available_{product.id}_true"
+        #     if is_available
+        #     else f"available_{product.id}_false"
+        # )
+
+        # Формирование подписи к фото
+        # caption = (
+        #     f"<strong>{name}</strong>\n"
+        #     f"<strong>{description}</strong>\n"
+        #     f"<strong>Закупочная цена: {purchase_price}</strong>\n"
+        #     f"<strong>Розничная цена: {price}</strong>\n"
+        #     f"<strong>Категория: {category}</strong>\n"
+        #     f"<strong>Продавец: {seller}</strong>\n"
+        #     f"<strong>{'есть' if is_available else 'нет'} в наличии</strong>\n"
+        # )
+
+        # # Кнопки управления
+        # buttons = {
+        #     "Удалить": f"delete_{product.id}",
+        #     "Изменить": f"change_{product.id}",
+        #     availability_text: availability_callback,
+        # }
+
+        # Отправка карточки товара
         await callback.message.answer_photo(
-            product.image,
-            caption=f"<strong>{product.name}</strong>\n"
-                f"<strong>{product.description}</strong>\n"
-                f"<strong>Закупочная цена: {round(product.purchase_price, 2)}</strong>\n"
-                f"<strong>Розничная цена: {round(product.price, 2)}</strong>\n"
-                f"<strong>Категория: {product.category.name}</strong>\n"
-                f"<strong>Продавец: {product.seller.name}</strong>\n"
-                f"<strong>Количество на складе: {product.quantity}</strong>\n", 
-        parse_mode="HTML",
-        reply_markup=get_callback_btns(
-                btns={
-                    "Удалить": f"delete_{product.id}",
-                    "Изменить": f"change_{product.id}",
-                },
-                sizes=(2,)
-            ),
+            photo=card.image,
+            caption=card.caption,
+            parse_mode="HTML",
+            reply_markup=get_callback_btns(btns=card.buttons, sizes=(2, 1)),
         )
+
     await callback.answer()
 
 
-@admin_router.callback_query(F.data.startswith('category_'))
+@admin_router.callback_query(F.data.startswith("available_"))
+async def change_availability(callback: types.CallbackQuery, session: AsyncSession):
+    try:
+        _, product_id_str, availability_str = callback.data.split("_")
+        product_id = int(product_id_str)
+        is_available = availability_str == "true"
+    except ValueError:
+        await callback.answer("Неверный формат данных", show_alert=True)
+        return
+
+    product = await orm_get_product(session, product_id)
+    if not product:
+        await callback.answer("Товар не найден", show_alert=True)
+        return
+
+    await orm_update_product_availability(session, product_id, is_available)
+    product.is_available = is_available  # вручную меняем
+
+    card = ProductCard(product)
+
+    await callback.message.edit_caption(
+        caption=card.caption,
+        parse_mode="HTML",
+        reply_markup=get_callback_btns(btns=card.buttons, sizes=(2,)),
+    )
+
+    await callback.answer("Статус обновлён")
+
+
+@admin_router.callback_query(F.data.startswith("category_"))
 async def starring_at_product(callback: types.CallbackQuery, session: AsyncSession):
-    category_id = callback.data.split('_')[-1]
-    for product in await orm_get_products(session, int(category_id)):
-        await callback.message.answer_photo(
-            product.image,
-            caption=f"<strong>{product.name}</strong>\n"
-                f"<strong>{product.description}</strong>\n"
-                f"<strong>Закупочная цена: {round(product.purchase_price, 2)}</strong>\n"
-                f"<strong>Розничная цена: {round(product.price, 2)}</strong>\n"
-                f"<strong>Категория: {product.category.name}</strong>\n"
-                f"<strong>Продавец: {product.seller.name}</strong>\n"
-                f"<strong>Количество на складе: {product.quantity}</strong>\n", 
-        parse_mode="HTML",
-        reply_markup=get_callback_btns(
-                btns={
-                    "Удалить": f"delete_{product.id}",
-                    "Изменить": f"change_{product.id}",
-                },
-                sizes=(2,)
-            ),
-        )
-    await callback.answer()
+    category_id_str = callback.data.split("_")[-1]
+    try:
+        category_id = int(category_id_str)
+    except ValueError:
+        await callback.answer("Неверный ID категории", show_alert=True)
+        return
 
+    products = await orm_get_products(session, category_id)
+
+    if not products:
+        await callback.message.answer("В этой категории пока нет товаров.")
+        await callback.answer()
+        return
+
+    for product in products:
+        card = ProductCard(product)
+        await callback.message.answer_photo(
+            photo=card.image,
+            caption=card.caption,
+            parse_mode="HTML",
+            reply_markup=get_callback_btns(btns=card.buttons, sizes=(2, 1)),
+        )
+
+    await callback.answer()
 
 
 @admin_router.callback_query(F.data.startswith("delete_"))
@@ -121,16 +217,21 @@ async def delete_product_callback(callback: types.CallbackQuery, session: AsyncS
 
 ################# Микро FSM для загрузки/изменения баннеров ############################
 
+
 class AddBanner(StatesGroup):
     image = State()
 
+
 # Отправляем перечень информационных страниц бота и становимся в состояние отправки photo
-@admin_router.message(StateFilter(None), F.text == 'Добавить/Изменить баннер')
+@admin_router.message(StateFilter(None), F.text == "Добавить/Изменить баннер")
 async def add_image2(message: types.Message, state: FSMContext, session: AsyncSession):
     pages_names = [page.name for page in await orm_get_info_pages(session)]
-    await message.answer(f"Отправьте фото баннера.\nВ описании укажите для какой страницы:\
-                         \n{', '.join(pages_names)}")
+    await message.answer(
+        f"Отправьте фото баннера.\nВ описании укажите для какой страницы:\
+                         \n{', '.join(pages_names)}"
+    )
     await state.set_state(AddBanner.image)
+
 
 # Добавляем/изменяем изображение в таблице (там уже есть записанные страницы по именам:
 # main, catalog, cart(для пустой корзины), about, payment, shipping
@@ -140,23 +241,31 @@ async def add_banner(message: types.Message, state: FSMContext, session: AsyncSe
     for_page = message.caption.strip()
     pages_names = [page.name for page in await orm_get_info_pages(session)]
     if for_page not in pages_names:
-        await message.answer(f"Введите нормальное название страницы, например:\
-                         \n{', '.join(pages_names)}")
+        await message.answer(
+            f"Введите нормальное название страницы, например:\
+                         \n{', '.join(pages_names)}"
+        )
         return
-    await orm_change_banner_image(session, for_page, image_id,)
+    await orm_change_banner_image(
+        session,
+        for_page,
+        image_id,
+    )
     await message.answer("Баннер добавлен/изменен.")
     await state.clear()
+
 
 # ловим некоррекный ввод
 @admin_router.message(AddBanner.image)
 async def add_banner2(message: types.Message, state: FSMContext):
     await message.answer("Отправьте фото баннера или отмена")
 
+
 #########################################################################################
 
 
-
 ######################### FSM для дабавления/изменения товаров админом ###################
+
 
 class AddProduct(StatesGroup):
     # Шаги состояний
@@ -166,7 +275,6 @@ class AddProduct(StatesGroup):
     new_category = State()
     seller = State()
     new_seller = State()
-    quantity = State()
     price = State()
     image = State()
 
@@ -207,7 +315,9 @@ async def add_product(message: types.Message, state: FSMContext):
     )
     await state.set_state(AddProduct.name)
 
-#TODO добавить выбор продавца при добалении товара
+
+# TODO добавить выбор продавца при добалении товара
+
 
 # Хендлер отмены и сброса состояния должен быть всегда именно здесь,
 # после того, как только встали в состояние номер 1 (элементарная очередность фильтров)
@@ -265,6 +375,7 @@ async def add_name(message: types.Message, state: FSMContext):
     await message.answer("Введите описание товара")
     await state.set_state(AddProduct.description)
 
+
 # Хендлер для отлова некорректных вводов для состояния name
 @admin_router.message(AddProduct.name)
 async def add_name2(message: types.Message, state: FSMContext):
@@ -273,24 +384,27 @@ async def add_name2(message: types.Message, state: FSMContext):
 
 # Ловим данные для состояние description и потом меняем состояние на price
 @admin_router.message(AddProduct.description, F.text)
-async def add_description(message: types.Message, state: FSMContext, session: AsyncSession):
+async def add_description(
+    message: types.Message, state: FSMContext, session: AsyncSession
+):
     if message.text == "." and AddProduct.product_for_change:
         await state.update_data(description=AddProduct.product_for_change.description)
     else:
         if 4 >= len(message.text):
-            await message.answer(
-                "Слишком короткое описание. \n Введите заново"
-            )
+            await message.answer("Слишком короткое описание. \n Введите заново")
             return
         await state.update_data(description=message.text)
 
     categories = await orm_get_categories(session)
-    btns = {category.name : str(category.id) for category in categories}
+    btns = {category.name: str(category.id) for category in categories}
     btns["Добавить категорию"] = "add_category"
     if AddProduct.product_for_change:
         btns["пропустить"] = "skip_category"
-    await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns))
+    await message.answer(
+        "Выберите категорию", reply_markup=get_callback_btns(btns=btns)
+    )
     await state.set_state(AddProduct.category)
+
 
 # Хендлер для отлова некорректных вводов для состояния description
 @admin_router.message(AddProduct.description)
@@ -303,8 +417,11 @@ async def add_new_category(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer("Введите название новой категории:")
     await state.set_state(AddProduct.new_category)
 
+
 @admin_router.message(AddProduct.new_category, F.text)
-async def save_new_category(message: types.Message, state: FSMContext, session: AsyncSession):
+async def save_new_category(
+    message: types.Message, state: FSMContext, session: AsyncSession
+):
     category_name = message.text.strip()
 
     success = await orm_add_category(session, category_name)
@@ -319,16 +436,22 @@ async def save_new_category(message: types.Message, state: FSMContext, session: 
     btns["Добавить категорию"] = "add_category"
     if AddProduct.product_for_change:
         btns["пропустить"] = "skip_category"
-    await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns))
+    await message.answer(
+        "Выберите категорию", reply_markup=get_callback_btns(btns=btns)
+    )
     await state.set_state(AddProduct.category)
+
 
 @admin_router.message(AddProduct.category, F.data == "skip_category")
 async def skip_category(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(category=AddProduct.product_for_change.category.id)
 
+
 # Ловим callback выбора категории
 @admin_router.callback_query(AddProduct.category)
-async def category_choice(callback: types.CallbackQuery, state: FSMContext, session: AsyncSession):
+async def category_choice(
+    callback: types.CallbackQuery, state: FSMContext, session: AsyncSession
+):
     if callback.data == "skip_category":
         # Если пользователь выбрал "пропустить", оставляем категорию без изменений
         await state.update_data(category=AddProduct.product_for_change.category)
@@ -337,7 +460,9 @@ async def category_choice(callback: types.CallbackQuery, state: FSMContext, sess
         btns["Добавить продавца"] = "add_seller"
         if AddProduct.product_for_change:
             btns["пропустить"] = "skip_seller"
-        await callback.message.answer('Выберите продавца', reply_markup=get_callback_btns(btns=btns))
+        await callback.message.answer(
+            "Выберите продавца", reply_markup=get_callback_btns(btns=btns)
+        )
         await state.set_state(AddProduct.seller)
         return
 
@@ -345,7 +470,9 @@ async def category_choice(callback: types.CallbackQuery, state: FSMContext, sess
     try:
         category_id = int(callback.data)
     except ValueError:
-        await callback.message.answer("Некорректный выбор. Используйте кнопки для выбора категории.")
+        await callback.message.answer(
+            "Некорректный выбор. Используйте кнопки для выбора категории."
+        )
         await callback.answer()
         return
 
@@ -359,18 +486,19 @@ async def category_choice(callback: types.CallbackQuery, state: FSMContext, sess
         btns["Добавить продавца"] = "add_seller"
         if AddProduct.product_for_change:
             btns["пропустить"] = "skip_seller"
-        await callback.message.answer('Выберите продавца', reply_markup=get_callback_btns(btns=btns))
+        await callback.message.answer(
+            "Выберите продавца", reply_markup=get_callback_btns(btns=btns)
+        )
         await state.set_state(AddProduct.seller)
     else:
-        await callback.message.answer('Используйте кнопки для выбора категории')
+        await callback.message.answer("Используйте кнопки для выбора категории")
         await callback.answer()
 
 
-#Ловим любые некорректные действия, кроме нажатия на кнопку выбора категории
+# Ловим любые некорректные действия, кроме нажатия на кнопку выбора категории
 @admin_router.message(AddProduct.category)
 async def category_choice2(message: types.Message, state: FSMContext):
-    await message.answer("'Выберите катеорию из кнопок, либо добавьте новую категорию'") 
-
+    await message.answer("'Выберите катеорию из кнопок, либо добавьте новую категорию'")
 
 
 @admin_router.callback_query(AddProduct.seller, F.data == "add_seller")
@@ -378,14 +506,19 @@ async def add_new_seller(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer(
         "Введите данные нового продавца через запятую в формате:\n"
         "Имя, Описание, Телефон, Адрес\n\n"
-        "Пример: Иван Иванов, продавец-молодец!, +79991234567, Москва\n\n"
+        "Пример: Иван Иванов, продажа обуви, +79991234567, Москва\n\n"
         "Если какие-то данные не нужны, оставьте их пустыми, например:\n"
         "Иван Иванов,,,Москва"
     )
-    await state.set_state(AddProduct.new_seller)  # Используем уже существующее состояние
+    await state.set_state(
+        AddProduct.new_seller
+    )  # Используем уже существующее состояние
+
 
 @admin_router.message(AddProduct.new_seller, F.text)
-async def save_new_seller(message: types.Message, state: FSMContext, session: AsyncSession):
+async def save_new_seller(
+    message: types.Message, state: FSMContext, session: AsyncSession
+):
     # Разделяем введённые данные по запятой
     data = message.text.split(",")
     if len(data) < 1 or not data[0].strip():
@@ -421,20 +554,26 @@ async def save_new_seller(message: types.Message, state: FSMContext, session: As
     await message.answer("Выберите продавца", reply_markup=get_callback_btns(btns=btns))
     await state.set_state(AddProduct.seller)
 
+
 @admin_router.callback_query(AddProduct.seller)
-async def seller_choice(callback: types.CallbackQuery, state: FSMContext, session: AsyncSession):
+async def seller_choice(
+    callback: types.CallbackQuery, state: FSMContext, session: AsyncSession
+):
     if callback.data == "skip_seller":
-        # Если пользователь выбрал "пропустить", оставляем продавца без изменений
-        await state.update_data(seller=AddProduct.product_for_change.seller)
-        await callback.message.answer("Введите количество товара:")
-        await state.set_state(AddProduct.quantity)
-        return
+        await callback.answer()
+        await state.update_data(seller=seller_id)
+        await callback.answer(
+            "Введите закупочную цену и цену продажи через запятую в формате 10.5, 15.0:"
+        )
+        await state.set_state(AddProduct.price)
 
     # Проверяем, что callback.data можно преобразовать в int
     try:
         seller_id = int(callback.data)
     except ValueError:
-        await callback.message.answer("Некорректный выбор. Используйте кнопки для выбора продавца.")
+        await callback.message.answer(
+            "Некорректный выбор. Используйте кнопки для выбора продавца."
+        )
         await callback.answer()
         return
 
@@ -442,37 +581,14 @@ async def seller_choice(callback: types.CallbackQuery, state: FSMContext, sessio
     if seller_id in [seller.id for seller in await orm_get_sellers(session)]:
         await callback.answer()
         await state.update_data(seller=seller_id)
-        await callback.message.answer("Введите количество товара:")
-        await state.set_state(AddProduct.quantity)
+        await callback.answer(
+            "Введите закупочную цену и цену продажи через запятую в формате 10.5, 15.0:"
+        )
+        await state.set_state(AddProduct.price)
     else:
         await callback.message.answer("Используйте кнопки для выбора продавца")
         await callback.answer()
 
-@admin_router.message(AddProduct.quantity, F.text)
-async def add_quantity(message: types.Message, state: FSMContext):
-    if message.text == "." and AddProduct.product_for_change:
-        await state.update_data(quantity=AddProduct.product_for_change.quantity)
-        await message.answer("Введите закупочную цену и цену продажи через запятую в формате 10.5, 15.0:")
-        await state.set_state(AddProduct.price)
-        return
-    
-    if not message.text.isdigit() or int(message.text) <= 0:
-        await message.answer(
-            "Количество товара должно быть целым числом больше 0.\nВведите заново"
-        )
-        return
-    
-    try:
-        quantity = int(message.text)
-        if quantity <= 0:
-            raise ValueError
-    except ValueError:
-        await message.answer("Введите корректное количество (целое число больше 0).")
-        return
-
-    await state.update_data(quantity=quantity)
-    await message.answer("Введите закупочную цену и цену продажи через запятую в формате 10.5, 15.0:")
-    await state.set_state(AddProduct.price)
 
 # Ловим данные для состояние price и потом меняем состояние на image
 @admin_router.message(AddProduct.price, F.text)
@@ -487,18 +603,23 @@ async def add_price(message: types.Message, state: FSMContext):
             # Разделяем введённые значения по запятой
             prices = message.text.split(",")
             if len(prices) != 2:
-                raise ValueError("Ожидается два значения, разделённых запятой")
-
-            # Преобразуем значения в числа
-            purchase_price = float(prices[0].replace(",", ".").strip())
-            price = float(prices[1].replace(",", ".").strip())
+                raise ValueError(
+                    "Ожидается не долее двух значений, разделённых запятой"
+                )
+            elif len(prices) == 1:
+                purchase_price, price = prices[0], prices[0]
+            else:
+                # Преобразуем значения в числа
+                purchase_price = float(prices[0].replace(",", ".").strip())
+                price = float(prices[1].replace(",", ".").strip())
 
             if purchase_price <= 0 or price <= 0:
                 raise ValueError("Цены должны быть положительными числами")
         except ValueError:
             await message.answer(
                 "Введите корректные значения цен в формате: закупочная, розничная\n"
-                "Например: 10.5, 15.0"
+                "Например: 10.5, 15.0\n"
+                "или просто одно значение, если закупочная цена равна розничной"
             )
             return
 
@@ -507,6 +628,7 @@ async def add_price(message: types.Message, state: FSMContext):
 
     await message.answer("Загрузите изображение товара")
     await state.set_state(AddProduct.image)
+
 
 # Хендлер для отлова некорректных ввода для состояния price
 @admin_router.message(AddProduct.price)
@@ -537,13 +659,15 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
 
     try:
         if AddProduct.product_for_change:
-            logging.info(f"Обновляем товар с ID {AddProduct.product_for_change.id} данными: {data}")
+            logging.info(
+                f"Обновляем товар с ID {AddProduct.product_for_change.id} данными: {data}"
+            )
             await orm_update_product(session, AddProduct.product_for_change.id, data)
         else:
             logging.info(f"Добавляем новый товар с данными: {data}")
             await orm_add_product(session, data)
             save_added_goods(data)
-            
+
         await message.answer("Товар добавлен/изменен", reply_markup=ADMIN_KB)
         await state.clear()
 
@@ -557,23 +681,27 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
 
     AddProduct.product_for_change = None
 
-
     AddProduct.product_for_change = None
+
 
 # Ловим все прочее некорректное поведение для этого состояния
 @admin_router.message(AddProduct.image)
 async def add_image2(message: types.Message, state: FSMContext):
     await message.answer("Отправьте фото пищи")
 
-@admin_router.message(F.text == 'Заказы')
+
+@admin_router.message(F.text == "Заказы")
 async def orders(message: types.Message):
     await message.answer(
         "Выберите статус заказа",
         reply_markup=get_status_keyboard(),
     )
 
+
 @admin_router.callback_query(StatusCallback.filter())
-async def handle_status_callback(callback: types.CallbackQuery, callback_data: dict, session: AsyncSession):
+async def handle_status_callback(
+    callback: types.CallbackQuery, callback_data: dict, session: AsyncSession
+):
     status = callback_data.value
     orders = await orm_get_orders(session, status=status)
 
@@ -586,6 +714,6 @@ async def handle_status_callback(callback: types.CallbackQuery, callback_data: d
             f"💰 Общая стоимость: {order.total_price} £.\n"
             f"📋 Статус: {order.status}\n"
             f"🕒 Дата создания: {order.created.strftime('%d.%m.%Y %H:%M')}\n"
-)
+        )
 
     await callback.answer()

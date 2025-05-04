@@ -10,6 +10,7 @@ from aiogram.utils.payload import decode_payload
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_query import (
     orm_add_to_cart,
+    orm_add_to_wait_list,
     orm_add_user,
     orm_create_order,
     orm_get_user,
@@ -101,16 +102,30 @@ async def add_to_cart(
     await callback.answer("Товар добавлен в корзину.")
 
 
-# TODO предложить дополнительные товары (продумать по какому принципу их предлагать)
+async def add_to_waitlist(
+    callback: types.CallbackQuery, callback_data: MenuCallBack, session: AsyncSession
+):
+    user = callback.from_user
+    # Добавляем пользователя в список ожидания
+    success_added = await orm_add_to_wait_list(
+        session, user_id=user.id, product_id=callback_data.product_id
+    )
+    if success_added:
+        await callback.answer("Вам придет оповещение, когда товар появится в наличии.")
+    else:
+        await callback.answer("Вы уже оставили заявку на этот товар")
 
 
 @user_private_router.callback_query(MenuCallBack.filter())
 async def user_menu(
     callback: types.CallbackQuery, callback_data: MenuCallBack, session: AsyncSession
 ):
-
     if callback_data.menu_name == "add_to_cart":
         await add_to_cart(callback, callback_data, session)
+        return
+
+    if callback_data.menu_name == "add_to_waitlist":
+        await add_to_waitlist(callback, callback_data, session)
         return
 
     media, reply_markup = await get_menu_content(
@@ -151,6 +166,23 @@ async def make_order(
         )
 
     await state.set_state(OrderState.waiting_for_phone_number)
+
+
+@user_private_router.callback_query(F.data == "orders")
+async def user_orders(callback: types.CallbackQuery, session: AsyncSession):
+    user_id = callback.from_user.id
+
+    # Вызываем функцию orders для получения списка заказов
+    media, reply_markup = await get_menu_content(
+        session=session,
+        level=4,  # Уровень меню для заказов
+        menu_name="orders",
+        user_id=user_id,
+    )
+
+    # Отправляем пользователю список заказов
+    await callback.message.edit_media(media=media, reply_markup=reply_markup)
+    await callback.answer()
 
 
 # 2. Подтверждение номера телефона или ввод нового
@@ -208,7 +240,7 @@ async def confirm_address(
     await state.update_data(delivery_address=delivery_address)
 
     # Создаем заказ
-    new_order, products_enough, deleted_items = await orm_create_order(
+    new_order = await orm_create_order(
         session, callback.from_user.id, delivery_address, phone_number
     )
 
@@ -235,10 +267,7 @@ async def confirm_address(
     await callback.message.answer(
         f"✅ Заказ №{new_order.id} создан!\n📞 Телефон: {phone_number}\n📍 Адрес: {delivery_address}\n💰 Стоимость: {new_order.total_price} £."
     )
-    if products_enough == False:
-        await bot.send_message(
-            f"некоторые товары были удалены из-за нехватки на складе: {deleted_items}, возможно кто-то купил последние пока вы оформляли заказ"
-        )
+
     user_id = callback.from_user.id
     await callback.answer("Спасибо за ваш заказ!")
     await main_menu(session, level=0, menu_name="main", user_id=user_id)
@@ -278,7 +307,7 @@ async def process_address(
     )
 
     # Создаем заказ
-    new_order, products_enough, deleted_items = await orm_create_order(
+    (new_order,) = await orm_create_order(
         session, user_id, delivery_address, phone_number
     )
 
@@ -302,13 +331,10 @@ async def process_address(
         except Exception as e:
             print(f"Не удалось отправить сообщение администратору {admin_id}: {e}")
 
-    await message.message.answer(
+    await message.answer(
         f"✅ Заказ №{new_order.id} создан!\n📞 Телефон: {phone_number}\n📍 Адрес: {delivery_address}\n💰 Стоимость: {new_order.total_price} £."
     )
-    if products_enough == False:
-        await bot.send_message(
-            f"некоторые товары были удалены из-за нехватки на складе: {deleted_items}, возможно кто-то купил последние пока вы оформляли заказ"
-        )
+
     user_id = message.from_user.id
     await message.answer("Спасибо за ваш заказ!")
     await main_menu(session, level=0, menu_name="main", user_id=user_id)

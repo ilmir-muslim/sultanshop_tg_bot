@@ -9,7 +9,6 @@ from datetime import datetime, time
 from aiogram import Bot, types, Router
 from aiogram.filters import Command
 from aiogram.filters.callback_data import CallbackData
-from aiogram.methods import send_message
 from aiogram.utils.deep_linking import create_start_link
 
 
@@ -17,7 +16,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from database.orm_query import orm_get_product_by_name
 from filters.chat_types import ChatTypeFilter
-from common.restricted_words import restricted_words
+# from common.restricted_words import restricted_words
 from kbds.inline import one_button_kb
 from utils.json_operations import (
     get_and_remove_random_item,
@@ -65,19 +64,19 @@ async def get_admins(message: types.Message, bot: Bot):
         await message.delete()
 
 
-def clean_text(text: str):
-    return text.translate(str.maketrans("", "", punctuation))
+# def clean_text(text: str):
+#     return text.translate(str.maketrans("", "", punctuation))
 
 
-@user_group_router.edited_message()
-@user_group_router.message()
-async def cleaner(message: types.Message):
-    if restricted_words.intersection(clean_text(message.text.lower()).split()):
-        await message.answer(
-            f"{message.from_user.first_name}, соблюдайте порядок в чате!"
-        )
-        await message.delete()
-        # await message.chat.ban(message.from_user.id)
+# @user_group_router.edited_message()
+# @user_group_router.message()
+# async def cleaner(message: types.Message):
+#     if restricted_words.intersection(clean_text(message.text.lower()).split()):
+#         await message.answer(
+#             f"{message.from_user.first_name}, соблюдайте порядок в чате!"
+#         )
+#         await message.delete()
+#         # await message.chat.ban(message.from_user.id)
 
 
 async def send_random_item_periodically(session_maker: async_sessionmaker, bot: Bot):

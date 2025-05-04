@@ -11,6 +11,7 @@ from database.orm_query import (
     orm_get_products,
     orm_get_quantity_in_cart,
     orm_get_user_carts,
+    orm_get_user_orders,
     orm_reduce_product_in_cart,
 )
 from kbds.inline import (
@@ -63,6 +64,7 @@ async def products(session, level, category, page, user_id=None):
 
     paginator = Paginator(products, page=page)
     product = paginator.get_page()[0]
+    is_available = product.is_available
 
     image = InputMediaPhoto(
         media=product.image,
@@ -72,7 +74,7 @@ async def products(session, level, category, page, user_id=None):
         f"<strong>Товар {paginator.page} из {paginator.pages}</strong>\n"
         f"<strong>Категория: {product.category.name}</strong>\n"
         f"<strong>Продавец: {product.seller.name}</strong>\n"
-        f"<strong>Количество на складе: {product.quantity}</strong>\n",
+        f"<strong>{"есть " if is_available else "нет "}в наличии</strong>\n",
         parse_mode="HTML",
     )
 
@@ -86,6 +88,7 @@ async def products(session, level, category, page, user_id=None):
         pagination_btns=pagination_btns,
         product_id=product.id,
         quantity=quantity,
+        is_available=is_available,
     )
 
     kbds.inline_keyboard.append(
@@ -115,6 +118,7 @@ async def show_all_products(callback: CallbackQuery, session: AsyncSession):
             product_id=product.id,
             sizes=(2, 1),
             quantity=quantity,
+            is_available=product.is_available,
         )
 
         await callback.message.answer_photo(
@@ -123,8 +127,7 @@ async def show_all_products(callback: CallbackQuery, session: AsyncSession):
             f"{product.description}\n"
             f"Стоимость: {round(product.price, 2)}\n"
             f"<strong>Категория: {product.category.name}</strong>\n"
-            f"<strong>Продавец: {product.seller.name}</strong>\n"
-            f"<strong>Количество на складе: {product.quantity}</strong>\n",
+            f"<strong>Продавец: {product.seller.name}</strong>\n",
             parse_mode="HTML",
             reply_markup=reply_markup,
         )
@@ -170,15 +173,17 @@ async def carts(session, level, menu_name, page, user_id, product_id):
         print(f"DEBUG: Общая сумма: {total_price}")
         # Составляем табличку содержимого корзины
         cart_summary_lines = [
-    "Товар        | Кол-во | Цена за шт. | Сумма",
-    "-----------------------------------------------",
+            "Товар      | Кол | Цена   | Сумма",
+            "----------------------------------",
         ]
+
     for c in carts:
-        name = c.product.name[:12].ljust(12)
-        qty = f"{c.quantity}".ljust(6)
-        price_per_unit = f"{c.product.price}£".ljust(10)
-        total = f"{c.quantity * c.product.price}£"
+        name = c.product.name[:10].ljust(10)       # Название товара
+        qty = str(c.quantity).rjust(3)              # Количество
+        price_per_unit = f"{c.product.price:.2f}".rjust(6)  # Цена за штуку
+        total = f"{c.quantity * c.product.price:.2f}".rjust(5)  # Сумма
         cart_summary_lines.append(f"{name} | {qty} | {price_per_unit} | {total}")
+
 
         cart_summary_text = "\n".join(cart_summary_lines)
 
@@ -220,7 +225,46 @@ async def carts(session, level, menu_name, page, user_id, product_id):
 
     return image, kbds
 
+async def orders(session: AsyncSession, level: int, user_id: int):
+    user_orders = await orm_get_user_orders(session, user_id)
 
+    if not user_orders:
+        banner = await orm_get_banner(session, "orders")
+        image = InputMediaPhoto(
+            media=banner.image, caption=f"<strong>{banner.description}</strong>"
+        )
+        kbds = get_user_main_btns(level=level)
+        return image, kbds
+
+    # Формируем текст для отображения заказов
+    orders_text = ["<strong>Ваши заказы:</strong>\n"]
+    for order in user_orders:
+        order_items = "\n".join(
+            [
+                f"- {item.product.name} x {item.quantity} ({item.product.price}£ за шт.)"
+                for item in order.items
+            ]
+        )
+        orders_text.append(
+            f"🆔 Заказ #{order.id}\n"
+            f"📍 Адрес доставки: {order.delivery_address}\n"
+            f"📦 Статус: {order.status}\n"
+            f"💰 Сумма: {order.total_price}£\n"
+            f"Товары:\n{order_items}\n"
+            "-----------------------------------"
+        )
+
+    caption = "\n".join(orders_text)
+
+    # Ограничиваем длину текста, если он слишком длинный
+    if len(caption) > 1024:
+        caption = caption[:1020] + "...\n(Слишком много данных для отображения)"
+
+    banner = await orm_get_banner(session, "orders")
+    image = InputMediaPhoto(media=banner.image, caption=caption, parse_mode="HTML")
+
+    kbds = get_user_main_btns(level=level)
+    return image, kbds
 
 async def get_menu_content(
     session: AsyncSession,
@@ -239,5 +283,7 @@ async def get_menu_content(
         return await products(session, level, category, page, user_id)
     elif level == 3:
         return await carts(session, level, menu_name, page, user_id, product_id)
+    elif level == 4:
+        return await orders(session, level, menu_name, user_id)
 
  
