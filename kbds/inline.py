@@ -30,39 +30,29 @@ class plural_goods:
 def get_user_main_btns(*, level: int, sizes: tuple[int] = (2,), quantity: int = 0):
     keyboard = InlineKeyboardBuilder()
     btns = {
-        "Товары 🏪": "catalog",
-        (
-            "Корзина 🛒"
-            if quantity == 0
-            else f"В корзине 🛒 {quantity} {plural_goods(quantity)}"
-        ): "cart",
-        "О нас ℹ️": "about",
-        "Мои заказы 📦": "orders",
+        # Товары всегда ведут в каталог (level=1)
+        "Товары 🏪": ("catalog", 1),  
+        
+        # Корзина всегда на level=3
+        "Корзина 🛒" if quantity == 0 else f"Корзина 🛒 {quantity}": ("cart", 3),
+        
+        # "О нас" остается на текущем уровне (например, если вызвано из главного меню)
+        "О нас ℹ️": ("about", level),
+        
+        # Заказы всегда на level=4
+        "Мои заказы 📦": ("orders", 4),
     }
-    for text, menu_name in btns.items():
-        if menu_name == "catalog":
-            keyboard.add(
-                InlineKeyboardButton(
-                    text=text,
-                    callback_data=MenuCallBack(
-                        level=level + 1, menu_name=menu_name
-                    ).pack(),
-                )
+
+    for text, (menu_name, target_level) in btns.items():
+        keyboard.add(
+            InlineKeyboardButton(
+                text=text,
+                callback_data=MenuCallBack(
+                    level=target_level,
+                    menu_name=menu_name
+                ).pack(),
             )
-        elif menu_name == "cart":
-            keyboard.add(
-                InlineKeyboardButton(
-                    text=text,
-                    callback_data=MenuCallBack(level=3, menu_name=menu_name).pack(),
-                )
-            )
-        else:
-            keyboard.add(
-                InlineKeyboardButton(
-                    text=text,
-                    callback_data=MenuCallBack(level=level, menu_name=menu_name).pack(),
-                )
-            )
+        )
 
     return keyboard.adjust(*sizes).as_markup()
 

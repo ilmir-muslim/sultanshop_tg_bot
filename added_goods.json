@@ -1,12 +1,12 @@
 [
     {
-        "id": 3,
-        "name": "чай имбирьный",
-        "description": "полезный прозрачный чай",
+        "id": 4,
+        "name": "товар с очень длинным названием например Копчёный сыр \"Косичка\"",
+        "description": "варвоарыва",
         "category": 5,
         "seller": 1,
         "purchase_price": 10.0,
-        "price": 15.0,
-        "image": "AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ"
+        "price": 10.0,
+        "image": "AgACAgIAAxkBAAIC52gM76r62cKx0VQrGOINBObILadbAAJw7DEbjbFpSHBPTP85iZ4dAQADAgADeQADNgQ"
     }
 ]

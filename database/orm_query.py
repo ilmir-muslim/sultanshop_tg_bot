@@ -54,6 +54,72 @@ async def orm_get_info_pages(session: AsyncSession):
     return result.scalars().all()
 
 
+async def orm_update_orders_banner_description(session: AsyncSession, user_id: int):
+    """
+    Обновляет описание заказов пользователя со статусами "оформлен" и "в работе"
+    в поле description записи с именем 'orders' в таблице Banner.
+
+    :param session: Сессия базы данных.
+    :param user_id: ID пользователя.
+    """
+    # Выполняем запрос для получения заказов пользователя с соединением связанных таблиц
+    query = (
+        select(
+            Order.id,
+            Order.delivery_address,
+            Order.status,
+            Order.total_price,
+            OrderItem.quantity,
+            Product.name,
+            Product.price,
+        )
+        .join(Order.items)  # Соединяем с таблицей OrderItem
+        .join(OrderItem.product)  # Соединяем с таблицей Product
+        .where(Order.user_id == user_id, Order.status.in_(["Оформлен", "в работе"]))
+    )
+    result = await session.execute(query)
+    user_orders = result.fetchall()
+
+    # Формируем текст для записи в поле description
+    if not user_orders:
+        description = "У вас нет активных заказов."
+    else:
+        orders_text = ["<strong>Ваши заказы:</strong>"]
+        current_order_id = None
+        for row in user_orders:
+            if row.id != current_order_id:
+                # Добавляем информацию о новом заказе
+                current_order_id = row.id
+                orders_text.append(
+                    f"🆔 Заказ #{row.id}\n"
+                    f"📍 Адрес доставки: {row.delivery_address}\n"
+                    f"📦 Статус: {row.status}\n"
+                    f"💰 Сумма: {row.total_price}£\n"
+                    "Товары:"
+                )
+            # Добавляем информацию о товаре в заказе
+            orders_text.append(
+                f"- {row.name} x {row.quantity} ({row.price}£ за шт.)"
+            )
+        orders_text.append("-----------------------------------")
+        description = "\n".join(orders_text)
+
+    # Ограничиваем длину текста, если он слишком длинный
+    if len(description) > 1024:
+        description = description[:1020] + "...\n(Слишком много данных для отображения)"
+
+    # Обновляем поле description в записи с именем 'orders' в таблице Banner
+    update_query = (
+        update(Banner)
+        .where(Banner.name == "orders")
+        .values(description=description)
+    )
+    await session.execute(update_query)
+    await session.commit()
+
+    # Логируем обновление для отладки
+    print(f"DEBUG: Поле description обновлено для записи 'orders': {description}")
+
 ############################ Категории ######################################
 
 
@@ -122,7 +188,6 @@ async def orm_get_product_by_name(session: AsyncSession, product_name: str):
     return product_id
 
 
-
 async def orm_get_products(session: AsyncSession, category_id: int = None):
     """
     Получить список товаров. Если передан category_id, фильтрует по категории.
@@ -167,7 +232,6 @@ async def orm_update_product_availability(
     )
     await session.execute(query)
     await session.commit()
-    
 
 
 async def orm_check_product_available(session: AsyncSession, product_id: int) -> bool:
@@ -331,7 +395,7 @@ async def orm_get_quantity_in_cart(session: AsyncSession, user_id: int):
 async def orm_create_order(
     session: AsyncSession, user_id: int, delivery_address: str, phone_number: str
 ):
-    # Извлекаем содержимое корзины пользователя
+    # 1. Получаем товары из корзины
     query = (
         select(Cart).where(Cart.user_id == user_id).options(joinedload(Cart.product))
     )
@@ -339,28 +403,38 @@ async def orm_create_order(
     cart_items = result.scalars().all()
 
     if not cart_items:
-        return None  # Корзина пуста
+        return None
 
-    # Рассчитываем общую стоимость заказа
+    # 2. Считаем общую сумму
     total_price = sum(item.product.price * item.quantity for item in cart_items)
 
-    # Создаём заказ
+    # 3. Создаём заказ
     new_order = Order(
         user_id=user_id,
         delivery_address=delivery_address,
         total_price=total_price,
-        status="Ожидает",
+        status="Оформлен",
     )
     session.add(new_order)
-    await session.flush()  # Получаем ID нового заказа
-    order_items = []
-    deleted_items = []
+    await session.flush()  # Получаем ID заказа
+
+    # 4. Создаём OrderItem для каждого товара
+    order_items = [
+        OrderItem(
+            order_id=new_order.id,
+            product_id=item.product_id,
+            quantity=item.quantity
+        )
+        for item in cart_items
+    ]
     session.add_all(order_items)
-    # Очищаем корзину
+
+    # 5. Очищаем корзину
     delete_query = delete(Cart).where(Cart.user_id == user_id)
     await session.execute(delete_query)
+    
     await session.commit()
-    return new_order, deleted_items
+    return new_order
 
 
 async def orm_get_orders(session: AsyncSession, status: str = None):
@@ -381,7 +455,7 @@ async def orm_get_orders(session: AsyncSession, status: str = None):
 async def orm_get_user_orders(session: AsyncSession, user_id: int):
     query = (
         select(Order)
-        .where(Order.user_id == user_id, Order.status.in_(["Ожидает", "В работе"]))
+        .where(Order.user_id == user_id, Order.status.in_(["Оформлен", "В работе"]))
         .options(joinedload(Order.items).joinedload(OrderItem.product))
     )
     result = await session.execute(query)

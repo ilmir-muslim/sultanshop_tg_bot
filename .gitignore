@@ -6,3 +6,5 @@ __pycache__/
 admins.json
 plan.txt
 app.log
+added_goods.json
+button_callbacks.json

@@ -9,14 +9,6 @@ description_for_info_pages = {
             'Контакты нашего магазина:\n'
             'Телефон: +201026282854\n'
             'Телеграм: @Vmisreabusultan, @Ilmir_muslim'),
-    "payment": as_marked_section(
-        Bold("Варианты оплаты:"),
-        "Карта российского банка",
-        "vodafon cash",
-        "При получении наличными",
-        "USDT",
-        marker="✅ ",
-    ).as_html(),
     "shipping": as_list(
         as_marked_section(
             Bold("Варианты доставки"),

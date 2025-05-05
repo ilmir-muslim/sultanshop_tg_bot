@@ -1,4 +1,5 @@
-from aiogram.types import InlineKeyboardButton, InputMediaPhoto, user
+import logging
+from aiogram.types import InlineKeyboardButton, InputMediaPhoto
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,8 +12,8 @@ from database.orm_query import (
     orm_get_products,
     orm_get_quantity_in_cart,
     orm_get_user_carts,
-    orm_get_user_orders,
     orm_reduce_product_in_cart,
+    orm_update_orders_banner_description,
 )
 from kbds.inline import (
     # create_order_menu_btns,
@@ -225,45 +226,26 @@ async def carts(session, level, menu_name, page, user_id, product_id):
 
     return image, kbds
 
-async def orders(session: AsyncSession, level: int, user_id: int):
-    user_orders = await orm_get_user_orders(session, user_id)
+async def orders(session: AsyncSession, level: int, menu_name: str, user_id: int):
+    # Создаём описание заказов в таблице Banner
+    await orm_update_orders_banner_description(session, user_id)
+    logging.info(f"Обновлено описание баннера с заказами для пользователя {user_id}")
 
-    if not user_orders:
-        banner = await orm_get_banner(session, "orders")
-        image = InputMediaPhoto(
-            media=banner.image, caption=f"<strong>{banner.description}</strong>"
-        )
-        kbds = get_user_main_btns(level=level)
-        return image, kbds
+    # Получаем баннер с обновлённым описанием заказов
+    banner = await orm_get_banner(session, menu_name)
 
-    # Формируем текст для отображения заказов
-    orders_text = ["<strong>Ваши заказы:</strong>\n"]
-    for order in user_orders:
-        order_items = "\n".join(
-            [
-                f"- {item.product.name} x {item.quantity} ({item.product.price}£ за шт.)"
-                for item in order.items
-            ]
-        )
-        orders_text.append(
-            f"🆔 Заказ #{order.id}\n"
-            f"📍 Адрес доставки: {order.delivery_address}\n"
-            f"📦 Статус: {order.status}\n"
-            f"💰 Сумма: {order.total_price}£\n"
-            f"Товары:\n{order_items}\n"
-            "-----------------------------------"
-        )
 
-    caption = "\n".join(orders_text)
+    caption = banner.description
 
     # Ограничиваем длину текста, если он слишком длинный
     if len(caption) > 1024:
         caption = caption[:1020] + "...\n(Слишком много данных для отображения)"
 
-    banner = await orm_get_banner(session, "orders")
+    # Формируем изображение и кнопки
     image = InputMediaPhoto(media=banner.image, caption=caption, parse_mode="HTML")
+    quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
+    kbds = get_user_main_btns(level=level, quantity=quantity)
 
-    kbds = get_user_main_btns(level=level)
     return image, kbds
 
 async def get_menu_content(
