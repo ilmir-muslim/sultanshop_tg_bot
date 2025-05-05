@@ -307,7 +307,7 @@ async def process_address(
     )
 
     # Создаем заказ
-    (new_order,) = await orm_create_order(
+    new_order = await orm_create_order(
         session, user_id, delivery_address, phone_number
     )
 
