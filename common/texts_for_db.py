@@ -11,9 +11,9 @@ description_for_info_pages = {
             'Телеграм: @Vmisreabusultan, @Ilmir_muslim'),
     "shipping": as_list(
         as_marked_section(
-            Bold("Варианты доставки"),
-            "Курьер",
-            "Самовывоз",
+            Bold("Для самовывоза: "),
+            "дождитесь сообщения о том что ваш заказ готов к выдаче",
+            "и приходите к нам в магазин по адресу: https://maps.app.goo.gl/bEAY1Zy45zn28A4e9?g_st=it",
             marker="✅ ",
         ),
     ).as_html(),

@@ -1,18 +1,18 @@
-from calendar import c
 import logging
+from venv import logger
 from aiogram import F, Bot, types, Router
 from aiogram.filters import CommandObject, CommandStart
 
 
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.utils.payload import decode_payload
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_query import (
     orm_add_to_cart,
     orm_add_to_wait_list,
     orm_add_user,
     orm_create_order,
+    orm_get_deliverers,
     orm_get_user,
     orm_update_user,
 )
@@ -30,6 +30,97 @@ from kbds.inline import (
 class OrderState(StatesGroup):
     waiting_for_address = State()
     waiting_for_phone_number = State()
+
+
+class SharedContextUser:
+    def __init__(self, session, bot):
+        self.session = session
+        self.bot = bot  # Инициализируем bot позже
+
+    async def order_details_text(self, order: int) -> dict:
+        """формирует текст для сообщения с деталями заказа."""
+
+        order_details = (
+            f"📦 Новый заказ №{order.id}\n"
+            f"👤 Покупатель: {order.user.first_name} {order.user.last_name}\n"
+            f"📞 Телефон: {order.user.phone or 'Телефон не указан'}\n"
+            f"📍 Адрес доставки: {order.delivery_address}\n"
+            f"💰 Общая стоимость: {order.total_price} £.\n"
+            f"📋 Статус: {order.status}\n"
+            f"🕒 Дата создания: {order.created.strftime('%d.%m.%Y %H:%M')}\n"
+        )
+        if order.items:
+            order_details += "\n🛒 Товары в заказе:\n"
+            for idx, item in enumerate(order.items, start=1):
+                order_details += f"{idx}. {item.product.name} - {item.quantity} шт. x {item.product.price} £ = {item.quantity * item.product.price} £\n"
+
+        order_details_for_buyer = (
+            f"📦 Новый заказ №{order.id}\n"
+            f"📞 Телефон: {order.user.phone or 'Телефон не указан'}\n"
+            f"📍 Адрес доставки: {order.delivery_address}\n"
+            f"💰 Общая стоимость: {order.total_price} £.\n"
+            f"📋 Статус: {order.status}\n"
+            f"🕒 Дата создания: {order.created.strftime('%d.%m.%Y %H:%M')}\n"
+        )
+
+        # Добавляем товары в заказ
+        if order.items:
+            order_details_for_buyer += "\n🛒 Товары в заказе:\n"
+            for idx, item in enumerate(order.items, start=1):
+                order_details_for_buyer += f"{idx}. {item.product.name} - {item.quantity} шт. x {item.product.price} £ = {item.quantity * item.product.price} £\n"
+        return {
+            "order_details": order_details,
+            "order_details_for_buyer": order_details_for_buyer,
+        }
+
+    async def send_message_to_deliverers(self, order_id: int) -> types.Message:
+        """Отправляет сообщение с деталями заказа доставщику."""
+        deliverers = await orm_get_deliverers(session=self.session)
+
+        logger.debug(f"deliverers raw: {deliverers}")
+
+        my_deliverer_list = [
+            deliverer.telegram_id for deliverer in deliverers if deliverer.is_active
+        ]
+        logger.debug(f"my_deliverer_list {my_deliverer_list}")
+
+        order_details_dict = await self.order_details_text(order_id)
+        order_text = order_details_dict["order_details"]
+
+        for deliverer in my_deliverer_list:
+            try:
+                await self.bot.send_message(
+                    deliverer,
+                    order_text,
+                    reply_markup=one_button_kb(
+                        text="Принять заказ",
+                        callback_data=f"accept_order_{order_id.id}",
+                    ),
+                )
+            except Exception as e:
+                logger.exception(f"Ошибка при отправке доставщику {deliverer}")
+
+    async def send_message_to_admins(self, order_id: int) -> types.Message:
+        """Отправляет сообщение с деталями заказа администратору."""
+
+        admin_list = self.bot.my_admins_list
+        logger.debug(f"admin_list raw: {admin_list}")
+
+        order_details_dict = await self.order_details_text(order_id)
+        order_text = order_details_dict["order_details"]
+
+        for admin in admin_list:
+            try:
+                await self.bot.send_message(
+                    admin,
+                    order_text,
+                    reply_markup=one_button_kb(
+                        text="В работе",
+                        callback_data=f"accept_order_{order_id.id}",
+                    ),
+                )
+            except Exception as e:
+                logger.exception(f"Ошибка при отправке администратору {admin}")
 
 
 user_private_router = Router()
@@ -207,7 +298,7 @@ async def confirm_phone(
 
 
 @user_private_router.callback_query(F.data == "change_phone")
-async def change_phone(callback: types.CallbackQuery, state: FSMContext):
+async def change_phone(callback: types.CallbackQuery):
     await callback.message.answer("Введите новый номер телефона:")
 
 
@@ -228,8 +319,12 @@ async def process_phone_number(message: types.Message, state: FSMContext):
 # 3. Подтверждение адреса или ввод нового
 @user_private_router.callback_query(F.data == "confirm_address")
 async def confirm_address(
-    callback: types.CallbackQuery, state: FSMContext, session: AsyncSession, bot: Bot
+    callback: types.CallbackQuery,
+    state: FSMContext,
+    session: AsyncSession,
+    bot: Bot,
 ):
+    context = SharedContextUser(session=session, bot=bot)
     data = await state.get_data()
     phone_number = data.get("phone_number")
 
@@ -244,33 +339,24 @@ async def confirm_address(
         session, callback.from_user.id, delivery_address, phone_number
     )
 
-    order_details = (
-        f"📦 Новый заказ №{new_order.id}\n"
-        f"👤 Покупатель: {callback.from_user.first_name} {callback.from_user.last_name}\n"
-        f"📞 Телефон: {phone_number}\n"
-        f"📍 Адрес: {delivery_address}\n"
-        f"💰 Стоимость: {new_order.total_price} £."
-    )
+    order_details_dict = await context.order_details_text(order=new_order)
+    order_details_for_buyer = order_details_dict["order_details_for_buyer"]
 
-    for admin_id in bot.my_admins_list:
-        try:
-            await bot.send_message(
-                admin_id,
-                order_details,
-                reply_markup=one_button_kb(
-                    text="В работе", callback_data="status_in_progress"
-                ),
-            )
-        except Exception as e:
-            print(f"Не удалось отправить сообщение администратору {admin_id}: {e}")
-
-    await callback.message.answer(
-        f"✅ Заказ №{new_order.id} создан!\n📞 Телефон: {phone_number}\n📍 Адрес: {delivery_address}\n💰 Стоимость: {new_order.total_price} £."
-    )
+    await context.send_message_to_deliverers(new_order)
+    await context.send_message_to_admins(new_order)
+    await callback.message.answer(order_details_for_buyer)
 
     user_id = callback.from_user.id
     await callback.answer("Спасибо за ваш заказ!")
-    await main_menu(session, level=0, menu_name="main", user_id=user_id)
+    media, reply_markup = await main_menu(
+        session, level=0, menu_name="main", user_id=user_id
+    )
+    # Отправляем главное меню пользователю
+    await callback.message.answer_photo(
+        photo=media.media,  # Изображение из главного меню
+        caption=media.caption,  # Описание из главного меню
+        reply_markup=reply_markup,  # Кнопки из главного меню
+    )
     await state.clear()
 
 
@@ -290,6 +376,7 @@ async def process_address(
     phone_number = data.get("phone_number")
     user_id = message.from_user.id
     delivery_address = message.text.strip()
+    context = SharedContextUser(session=session, bot=bot)
 
     # Записываем адрес в state только после подтверждения или ввода
     await state.update_data(delivery_address=delivery_address)
@@ -307,36 +394,28 @@ async def process_address(
     )
 
     # Создаем заказ
-    new_order = await orm_create_order(
-        session, user_id, delivery_address, phone_number
-    )
+    new_order = await orm_create_order(session, user_id, delivery_address, phone_number)
 
-    order_details = (
-        f"📦 Новый заказ №{new_order.id}\n"
-        f"👤 Покупатель: {message.from_user.first_name} {message.from_user.last_name}\n"
-        f"📞 Телефон: {phone_number}\n"
-        f"📍 Адрес: {delivery_address}\n"
-        f"💰 Стоимость: {new_order.total_price} £"
-    )
+    order_details_dict = await context.order_details_text(order=new_order)
+    order_details_for_buyer = order_details_dict["order_details_for_buyer"]
 
-    for admin_id in bot.my_admins_list:
-        try:
-            await bot.send_message(
-                admin_id,
-                order_details,
-                reply_markup=one_button_kb(
-                    text="В работе", callback_data="status_in_progress"
-                ),
-            )
-        except Exception as e:
-            print(f"Не удалось отправить сообщение администратору {admin_id}: {e}")
+    await context.send_message_to_deliverers(new_order.id)
+    await context.send_message_to_admins(new_order.id)
 
-    await message.answer(
-        f"✅ Заказ №{new_order.id} создан!\n📞 Телефон: {phone_number}\n📍 Адрес: {delivery_address}\n💰 Стоимость: {new_order.total_price} £."
-    )
+    await message.answer(order_details_for_buyer)
 
     user_id = message.from_user.id
     await message.answer("Спасибо за ваш заказ!")
-    await main_menu(session, level=0, menu_name="main", user_id=user_id)
+    # Получаем данные для главного меню
+    media, reply_markup = await main_menu(
+        session, level=0, menu_name="main", user_id=user_id
+    )
+
+    # Отправляем главное меню пользователю
+    await message.answer_photo(
+        photo=media.media,  # Изображение из главного меню
+        caption=media.caption,  # Описание из главного меню
+        reply_markup=reply_markup,  # Кнопки из главного меню
+    )
 
     await state.clear()

@@ -30,17 +30,11 @@ class plural_goods:
 def get_user_main_btns(*, level: int, sizes: tuple[int] = (2,), quantity: int = 0):
     keyboard = InlineKeyboardBuilder()
     btns = {
-        # Товары всегда ведут в каталог (level=1)
-        "Товары 🏪": ("catalog", 1),  
-        
-        # Корзина всегда на level=3
+        "Товары 🏪": ("catalog", 1),
         "Корзина 🛒" if quantity == 0 else f"Корзина 🛒 {quantity}": ("cart", 3),
-        
-        # "О нас" остается на текущем уровне (например, если вызвано из главного меню)
         "О нас ℹ️": ("about", level),
-        
-        # Заказы всегда на level=4
         "Мои заказы 📦": ("orders", 4),
+        "Доставка 🛵": ("shipping", 5),
     }
 
     for text, (menu_name, target_level) in btns.items():
@@ -48,8 +42,7 @@ def get_user_main_btns(*, level: int, sizes: tuple[int] = (2,), quantity: int = 
             InlineKeyboardButton(
                 text=text,
                 callback_data=MenuCallBack(
-                    level=target_level,
-                    menu_name=menu_name
+                    level=target_level, menu_name=menu_name
                 ).pack(),
             )
         )
@@ -248,7 +241,7 @@ def get_callback_btns(*, btns: dict[str, str], sizes: tuple[int] = (2,)):
     keyboard = InlineKeyboardBuilder()
 
     for text, data in btns.items():
-        keyboard.add(InlineKeyboardButton(text=text, callback_data=data))
+        keyboard.add(InlineKeyboardButton(text=text, callback_data=str(data)))
 
     return keyboard.adjust(*sizes).as_markup()
 
@@ -301,18 +294,27 @@ def one_button_kb(text: str, **kwargs):
     )
 
 
-# def change_product_kb(sizes: tuple[int] = (3, 2)):
-#     buttons = [
-#         InlineKeyboardButton(text="Название", callback_data="name"),
-#         InlineKeyboardButton(text="Описание", callback_data="description"),
-#         InlineKeyboardButton(text="Категория", callback_data="category"),
-#         InlineKeyboardButton(text="Продавец", callback_data="seller"),
-#         InlineKeyboardButton(text="Количество", callback_data="quantity"),
-#         InlineKeyboardButton(text="Закупочная цена", callback_data="purchase_price"),
-#         InlineKeyboardButton(text="Цена", callback_data="price"),
-#         InlineKeyboardButton(text="Изображение", callback_data="image"),
-#         InlineKeyboardButton(text="Отмена", callback_data="отмена"),
-#     ]
-#     keyboard = InlineKeyboardBuilder()
-#     keyboard.add(*buttons)
-#     return keyboard.adjust(*sizes).as_markup()
+def get_raiting_keyboard(
+    target_type: str, target_id: int, order_id: int
+) -> InlineKeyboardMarkup:
+    """
+    Генерирует клавиатуру для оценки.
+    """
+    buttons = [
+        InlineKeyboardButton(
+            text="⭐️ 1", callback_data=f"{target_type}_{target_id}_{order_id}_1"
+        ),
+        InlineKeyboardButton(
+            text="⭐️ 2", callback_data=f"{target_type}_{target_id}_{order_id}_2"
+        ),
+        InlineKeyboardButton(
+            text="⭐️ 3", callback_data=f"{target_type}_{target_id}_{order_id}_3"
+        ),
+        InlineKeyboardButton(
+            text="⭐️ 4", callback_data=f"{target_type}_{target_id}_{order_id}_4"
+        ),
+        InlineKeyboardButton(
+            text="⭐️ 5", callback_data=f"{target_type}_{target_id}_{order_id}_5"
+        ),
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=[buttons])

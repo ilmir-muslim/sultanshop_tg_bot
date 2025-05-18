@@ -3,6 +3,7 @@ import json
 import logging
 import hashlib
 import os
+from pathlib import Path
 from string import punctuation
 from datetime import datetime, time
 
@@ -14,6 +15,7 @@ from aiogram.utils.deep_linking import create_start_link
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from config import ADMIN_FILE, GROUPS_FILE
 from database.orm_query import orm_get_product_by_name
 from filters.chat_types import ChatTypeFilter
 # from common.restricted_words import restricted_words
@@ -39,7 +41,7 @@ user_group_router = Router()
 user_group_router.message.filter(ChatTypeFilter(["group", "supergroup"]))
 user_group_router.edited_message.filter(ChatTypeFilter(["group", "supergroup"]))
 
-ADMIN_FILE = "admins.json"
+
 
 
 @user_group_router.message(Command("admin"))
@@ -62,21 +64,6 @@ async def get_admins(message: types.Message, bot: Bot):
 
     if message.from_user.id in bot.my_admins_list:
         await message.delete()
-
-
-# def clean_text(text: str):
-#     return text.translate(str.maketrans("", "", punctuation))
-
-
-# @user_group_router.edited_message()
-# @user_group_router.message()
-# async def cleaner(message: types.Message):
-#     if restricted_words.intersection(clean_text(message.text.lower()).split()):
-#         await message.answer(
-#             f"{message.from_user.first_name}, соблюдайте порядок в чате!"
-#         )
-#         await message.delete()
-#         # await message.chat.ban(message.from_user.id)
 
 
 async def send_random_item_periodically(session_maker: async_sessionmaker, bot: Bot):
@@ -121,7 +108,7 @@ async def send_random_item_periodically(session_maker: async_sessionmaker, bot: 
 
             # Загружаем список групп
             try:
-                with open("groups.json", "r", encoding="utf-8") as file:
+                with open(GROUPS_FILE, "r", encoding="utf-8") as file:
                     groups = json.load(file)
             except (FileNotFoundError, json.JSONDecodeError) as e:
                 logging.error(f"Ошибка загрузки groups.json: {e}")

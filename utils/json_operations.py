@@ -6,10 +6,14 @@ from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_query import orm_check_product_available, orm_get_products
 from utils.json_utils import decimal_default, prepare_for_json
+from config import ADMIN_FILE, DELIVERERS_FILE
+
+
+
 
 
 def save_admins(admins_list):
-    with open("admins.json", "w", encoding="utf-8") as file:
+    with open(ADMIN_FILE, "w", encoding="utf-8") as file:
         json.dump(admins_list, file, ensure_ascii=False, indent=4)
 
 
@@ -57,7 +61,7 @@ async def get_and_remove_random_item(session: AsyncSession):
                     is_available = await orm_check_product_available(
                         session, product.id
                     )
-                    if not is_available:
+                    if not is_available or product.name.startswith("Зона доставки"):
                         logging.info(f"Товар {product.name} недоступен")
                         continue
                     item_data = {

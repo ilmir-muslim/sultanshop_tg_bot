@@ -1,8 +1,6 @@
 import logging
-from unicodedata import category
 from aiogram import F, Router, types
 from aiogram.filters import Command, StateFilter, or_f
-from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
@@ -105,40 +103,6 @@ async def show_all_products(callback: types.CallbackQuery, session: AsyncSession
 
     for product in products:
         card = ProductCard(product)
-        # Сбор информации о товаре
-        # name = product.name
-        # description = product.description
-        # purchase_price = round(product.purchase_price, 2)
-        # price = round(product.price, 2)
-        # category = product.category.name
-        # seller = product.seller.name
-        # is_available = product.is_available
-        # availability_text = "есть в наличии" if is_available else "нет в наличии"
-        # availability_callback = (
-        #     f"available_{product.id}_true"
-        #     if is_available
-        #     else f"available_{product.id}_false"
-        # )
-
-        # Формирование подписи к фото
-        # caption = (
-        #     f"<strong>{name}</strong>\n"
-        #     f"<strong>{description}</strong>\n"
-        #     f"<strong>Закупочная цена: {purchase_price}</strong>\n"
-        #     f"<strong>Розничная цена: {price}</strong>\n"
-        #     f"<strong>Категория: {category}</strong>\n"
-        #     f"<strong>Продавец: {seller}</strong>\n"
-        #     f"<strong>{'есть' if is_available else 'нет'} в наличии</strong>\n"
-        # )
-
-        # # Кнопки управления
-        # buttons = {
-        #     "Удалить": f"delete_{product.id}",
-        #     "Изменить": f"change_{product.id}",
-        #     availability_text: availability_callback,
-        # }
-
-        # Отправка карточки товара
         await callback.message.answer_photo(
             photo=card.image,
             caption=card.caption,
@@ -559,13 +523,15 @@ async def save_new_seller(
 async def seller_choice(
     callback: types.CallbackQuery, state: FSMContext, session: AsyncSession
 ):
+    logging.info(f"Callback data: {callback.data}, State: {await state.get_state()}")
     if callback.data == "skip_seller":
-        await callback.answer()
-        await state.update_data(seller=seller_id)
-        await callback.answer(
+        await state.update_data(seller=AddProduct.product_for_change.seller.id)
+        # Если пользователь выбрал "пропустить", оставляем продавца без изменений
+        await callback.message.answer(
             "Введите закупочную цену и цену продажи через запятую в формате 10.5, 15.0:"
         )
         await state.set_state(AddProduct.price)
+        return
 
     # Проверяем, что callback.data можно преобразовать в int
     try:
@@ -579,9 +545,8 @@ async def seller_choice(
 
     # Проверяем, что продавец существует
     if seller_id in [seller.id for seller in await orm_get_sellers(session)]:
-        await callback.answer()
         await state.update_data(seller=seller_id)
-        await callback.answer(
+        await callback.message.answer(
             "Введите закупочную цену и цену продажи через запятую в формате 10.5, 15.0:"
         )
         await state.set_state(AddProduct.price)
@@ -602,7 +567,7 @@ async def add_price(message: types.Message, state: FSMContext):
         try:
             # Разделяем введённые значения по запятой
             prices = message.text.split(",")
-            if len(prices) != 2:
+            if len(prices) > 2:
                 raise ValueError(
                     "Ожидается не долее двух значений, разделённых запятой"
                 )
@@ -613,9 +578,10 @@ async def add_price(message: types.Message, state: FSMContext):
                 purchase_price = float(prices[0].replace(",", ".").strip())
                 price = float(prices[1].replace(",", ".").strip())
 
-            if purchase_price <= 0 or price <= 0:
+            if float(purchase_price) <= 0 or float(price) <= 0:
                 raise ValueError("Цены должны быть положительными числами")
-        except ValueError:
+        except ValueError as e:
+            logging.error(f"Ошибка обработки цены: {e}")
             await message.answer(
                 "Введите корректные значения цен в формате: закупочная, розничная\n"
                 "Например: 10.5, 15.0\n"

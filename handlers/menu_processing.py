@@ -9,6 +9,7 @@ from database.orm_query import (
     orm_delete_from_cart,
     orm_get_banner,
     orm_get_categories,
+    orm_get_delivery_zones,
     orm_get_products,
     orm_get_quantity_in_cart,
     orm_get_user_carts,
@@ -17,6 +18,7 @@ from database.orm_query import (
 )
 from kbds.inline import (
     # create_order_menu_btns,
+    get_callback_btns,
     get_products_btns,
     get_user_cart,
     get_user_catalog_btns,
@@ -69,12 +71,11 @@ async def products(session, level, category, page, user_id=None):
 
     image = InputMediaPhoto(
         media=product.image,
-        caption=f"<strong>{product.name}</strong>\n"
-        f"{product.description}\n"
-        f"Стоимость: {round(product.price, 2)}\n"
-        f"<strong>Товар {paginator.page} из {paginator.pages}</strong>\n"
-        f"<strong>Категория: {product.category.name}</strong>\n"
-        f"<strong>Продавец: {product.seller.name}</strong>\n"
+        caption=f"<strong>{product.name}</strong>\n\n"
+        f"{product.description}\n\n"
+        f"<strong>Стоимость: {round(product.price, 2)}</strong>\n\n"
+        f"<strong>Товар {paginator.page} из {paginator.pages}</strong>\n\n"
+        f"<strong>Категория: {product.category.name}</strong>\n\n"
         f"<strong>{"есть " if is_available else "нет "}в наличии</strong>\n",
         parse_mode="HTML",
     )
@@ -144,12 +145,11 @@ async def carts(session, level, menu_name, page, user_id, product_id):
     elif menu_name == "decrement":
         is_cart = await orm_reduce_product_in_cart(session, user_id, product_id)
         if page > 1 and not is_cart:
-            page-= 1
+            page -= 1
     elif menu_name == "increment":
         await orm_add_to_cart(session, user_id, product_id)
 
     carts = await orm_get_user_carts(session, user_id)
-
 
     if not carts:
         banner = await orm_get_banner(session, "cart")
@@ -170,7 +170,9 @@ async def carts(session, level, menu_name, page, user_id, product_id):
         cart = paginator.get_page()[0]
 
         cart_price = round(cart.quantity * cart.product.price, 2)
-        total_price = round(sum(cart.quantity * cart.product.price for cart in carts), 2)
+        total_price = round(
+            sum(cart.quantity * cart.product.price for cart in carts), 2
+        )
         print(f"DEBUG: Общая сумма: {total_price}")
         # Составляем табличку содержимого корзины
         cart_summary_lines = [
@@ -179,12 +181,11 @@ async def carts(session, level, menu_name, page, user_id, product_id):
         ]
 
     for c in carts:
-        name = c.product.name[:10].ljust(10)       # Название товара
-        qty = str(c.quantity).rjust(3)              # Количество
+        name = c.product.name[:10].ljust(10)  # Название товара
+        qty = str(c.quantity).rjust(3)  # Количество
         price_per_unit = f"{c.product.price:.2f}".rjust(6)  # Цена за штуку
         total = f"{c.quantity * c.product.price:.2f}".rjust(5)  # Сумма
         cart_summary_lines.append(f"{name} | {qty} | {price_per_unit} | {total}")
-
 
         cart_summary_text = "\n".join(cart_summary_lines)
 
@@ -226,6 +227,7 @@ async def carts(session, level, menu_name, page, user_id, product_id):
 
     return image, kbds
 
+
 async def orders(session: AsyncSession, level: int, menu_name: str, user_id: int):
     # Создаём описание заказов в таблице Banner
     await orm_update_orders_banner_description(session, user_id)
@@ -233,7 +235,6 @@ async def orders(session: AsyncSession, level: int, menu_name: str, user_id: int
 
     # Получаем баннер с обновлённым описанием заказов
     banner = await orm_get_banner(session, menu_name)
-
 
     caption = banner.description
 
@@ -247,6 +248,54 @@ async def orders(session: AsyncSession, level: int, menu_name: str, user_id: int
     kbds = get_user_main_btns(level=level, quantity=quantity)
 
     return image, kbds
+
+
+async def shipping(session: AsyncSession, level: int, menu_name: str, user_id: int):
+    # Получаем баннер с обновлённым описанием доставки
+    banner = await orm_get_banner(session, menu_name)
+
+    caption = banner.description
+
+    # Ограничиваем длину текста, если он слишком длинный
+    if len(caption) > 1024:
+        caption = caption[:1020] + "...\n(Слишком много данных для отображения)"
+
+    # Формируем изображение и кнопки
+    image = InputMediaPhoto(media=banner.image, caption=caption, parse_mode="HTML")
+    quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
+    delivery_zone = await orm_get_delivery_zones(session)
+    btns = {
+        delivery_zone.name: f"delivery_zone_{delivery_zone.id}"
+        for delivery_zone in delivery_zone
+    }
+    logging.info(f"Получены зоны доставки для пользователя {user_id}: {btns}")
+    btns["Назад"] = "main_menu"
+    btns["Самовывоз"] = "self_pickup"
+    kbds = get_callback_btns(btns=btns)
+    return image, kbds
+
+
+@menu_progressing_router.callback_query(F.data.startswith("delivery_zone_"))
+async def add_delivery_to_cart(callback: CallbackQuery, session: AsyncSession):
+    delivery_zone_id = int(callback.data.split("_")[-1])
+    user_id = callback.from_user.id
+    await orm_add_to_cart(session, user_id, delivery_zone_id)
+    await callback.answer("Зона доставки добавлена в корзину.")
+
+
+@menu_progressing_router.callback_query(F.data == "main_menu")
+async def back_to_main_menu(callback: CallbackQuery, session: AsyncSession):
+    user_id = callback.from_user.id
+    image, kbds = await get_menu_content(
+        session=session,
+        level=0,  # Уровень главного меню
+        menu_name="main",
+        user_id=user_id,
+    )
+    await callback.message.edit_media(media=image, reply_markup=kbds)
+    await callback.answer()  # Закрываем уведомление
+
+
 
 async def get_menu_content(
     session: AsyncSession,
@@ -267,5 +316,5 @@ async def get_menu_content(
         return await carts(session, level, menu_name, page, user_id, product_id)
     elif level == 4:
         return await orders(session, level, menu_name, user_id)
-
- 
+    elif level == 5:
+        return await shipping(session, level, menu_name, user_id)

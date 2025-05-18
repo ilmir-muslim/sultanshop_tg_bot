@@ -1,13 +1,16 @@
+from venv import logger
 from sqlalchemy import func, select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload, selectinload
-from yarl import Query
 
 from database.models import (
     Banner,
     Cart,
     Category,
+    Deliverer,
+    DelivererReview,
     Order,
     OrderItem,
     Product,
@@ -72,10 +75,15 @@ async def orm_update_orders_banner_description(session: AsyncSession, user_id: i
             OrderItem.quantity,
             Product.name,
             Product.price,
+            Deliverer.first_name,  # Добавляем поле из таблицы Deliverer
+            Deliverer.phone,  # Добавляем поле из таблицы Deliverer
         )
         .join(Order.items)  # Соединяем с таблицей OrderItem
         .join(OrderItem.product)  # Соединяем с таблицей Product
-        .where(Order.user_id == user_id, Order.status.in_(["Оформлен", "в работе"]))
+        .outerjoin(
+            Order.deliverer
+        )  # Соединяем с таблицей Deliverer (outerjoin для необязательной связи)
+        .where(Order.user_id == user_id, Order.status.in_(["Оформлен", "В работе"]))
     )
     result = await session.execute(query)
     user_orders = result.fetchall()
@@ -89,36 +97,47 @@ async def orm_update_orders_banner_description(session: AsyncSession, user_id: i
         for row in user_orders:
             if row.id != current_order_id:
                 # Добавляем информацию о новом заказе
+                if current_order_id is not None:
+                    # Добавляем разделитель после предыдущего заказа
+                    orders_text.append("🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸\n")
+
                 current_order_id = row.id
+                deliverer_info = (
+                    f"🛵 Курьер : {row.first_name}\n"
+                    f"📱 Номер телефона курьера : {row.phone}\n"
+                    if row.first_name and row.phone
+                    else "Курьер не назначен.\n"
+                )
                 orders_text.append(
                     f"🆔 Заказ #{row.id}\n"
                     f"📍 Адрес доставки: {row.delivery_address}\n"
                     f"📦 Статус: {row.status}\n"
                     f"💰 Сумма: {row.total_price}£\n"
+                    f"{deliverer_info}"
+                    f"-----------------------------------\n"
                     "Товары:"
                 )
             # Добавляем информацию о товаре в заказе
-            orders_text.append(
-                f"- {row.name} x {row.quantity} ({row.price}£ за шт.)"
-            )
+            orders_text.append(f"- {row.name} x {row.quantity} ({row.price}£ за шт.)")
         orders_text.append("-----------------------------------")
         description = "\n".join(orders_text)
+        logger.debug(f"DEBUG: {description}")
 
     # Ограничиваем длину текста, если он слишком длинный
+    
     if len(description) > 1024:
         description = description[:1020] + "...\n(Слишком много данных для отображения)"
 
     # Обновляем поле description в записи с именем 'orders' в таблице Banner
     update_query = (
-        update(Banner)
-        .where(Banner.name == "orders")
-        .values(description=description)
+        update(Banner).where(Banner.name == "orders").values(description=description)
     )
     await session.execute(update_query)
     await session.commit()
 
     # Логируем обновление для отладки
     print(f"DEBUG: Поле description обновлено для записи 'orders': {description}")
+
 
 ############################ Категории ######################################
 
@@ -203,7 +222,7 @@ async def orm_get_products(session: AsyncSession, category_id: int = None):
     return result.scalars().all()
 
 
-async def orm_update_product(session: AsyncSession, product_id: int, data):
+async def orm_update_product(session: AsyncSession, product_id: int, data: dict):
     query = (
         update(Product)
         .where(Product.id == product_id)
@@ -215,7 +234,6 @@ async def orm_update_product(session: AsyncSession, product_id: int, data):
             purchase_price=float(data["purchase_price"]),
             price=float(data["price"]),
             image=data["image"],
-            is_available=data["is_available"],
         )
     )
     await session.execute(query)
@@ -393,11 +411,16 @@ async def orm_get_quantity_in_cart(session: AsyncSession, user_id: int):
 
 
 async def orm_create_order(
-    session: AsyncSession, user_id: int, delivery_address: str, phone_number: str
-):
-    # 1. Получаем товары из корзины
+    session: AsyncSession, 
+    user_id: int, 
+    delivery_address: str, 
+    phone_number: str
+) -> Order:
+    # 1. Получаем товары из корзины с загруженными продуктами
     query = (
-        select(Cart).where(Cart.user_id == user_id).options(joinedload(Cart.product))
+        select(Cart)
+        .where(Cart.user_id == user_id)
+        .options(joinedload(Cart.product))
     )
     result = await session.execute(query)
     cart_items = result.scalars().all()
@@ -408,7 +431,7 @@ async def orm_create_order(
     # 2. Считаем общую сумму
     total_price = sum(item.product.price * item.quantity for item in cart_items)
 
-    # 3. Создаём заказ
+    # 3. Создаём заказ 
     new_order = Order(
         user_id=user_id,
         delivery_address=delivery_address,
@@ -418,23 +441,34 @@ async def orm_create_order(
     session.add(new_order)
     await session.flush()  # Получаем ID заказа
 
-    # 4. Создаём OrderItem для каждого товара
+    # 4. Создаём OrderItem 
     order_items = [
         OrderItem(
-            order_id=new_order.id,
-            product_id=item.product_id,
+            order_id=new_order.id, 
+            product_id=item.product_id, 
             quantity=item.quantity
         )
         for item in cart_items
     ]
     session.add_all(order_items)
 
-    # 5. Очищаем корзину
+    # 5. Очищаем корзину 
     delete_query = delete(Cart).where(Cart.user_id == user_id)
     await session.execute(delete_query)
-    
+
+    # 6. Дополнительно загружаем связанные данные перед возвратом
+    full_order = await session.execute(
+        select(Order)
+        .where(Order.id == new_order.id)
+        .options(
+            selectinload(Order.user),
+            selectinload(Order.items).joinedload(OrderItem.product)
+        )
+    )
+    full_order = full_order.scalar_one()
+
     await session.commit()
-    return new_order
+    return full_order
 
 
 async def orm_get_orders(session: AsyncSession, status: str = None):
@@ -462,8 +496,22 @@ async def orm_get_user_orders(session: AsyncSession, user_id: int):
     return result.scalars().all()
 
 
-async def orm_update_order_status(session: AsyncSession, order_id: int, status: str):
-    query = update(Order).where(Order.id == order_id).values(status=status)
+async def orm_update_order(session: AsyncSession, order_id: int, data: dict):
+    """
+    Обновляет запись в таблице Order.
+
+    :param session: Сессия базы данных.
+    :param order_id: ID заказа, который нужно обновить.
+    :param data: Словарь с данными для обновления.
+                 Ключи должны соответствовать полям модели Order.
+    :return: Обновлённый объект Order.
+    """
+    query = (
+        update(Order)
+        .where(Order.id == order_id)
+        .values(**data)
+        .execution_options(synchronize_session="fetch")
+    )
     await session.execute(query)
     await session.commit()
 
@@ -495,3 +543,193 @@ async def orm_add_to_wait_list(session: AsyncSession, user_id: int, product_id: 
     session.add(new_wait_list_entry)
     await session.commit()
     return True
+
+
+################# работа с доставкой и доставщиками################################
+
+
+async def orm_get_delivery_zones(session: AsyncSession):
+    """
+    Возвращает продукты из таблицы Product с категорией "Доставка/Курьер"
+    и названием, начинающимся со слов "Зона доставки ".
+    """
+    query = (
+        select(Product)
+        .join(Product.category)  # Соединяем с таблицей Category
+        .where(
+            Category.name == "Доставка/Курьер",  # Фильтруем по категории
+            Product.name.like(
+                "Зона доставки %"
+            ),  # Название начинается с "Зона доставки "
+        )
+    )
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+async def orm_add_deliverer(
+    session: AsyncSession,
+    telegram_id: int,
+    telegram_name: str = None,
+    first_name: str = None,
+    last_name: str = None,
+    phone: str = None,
+):
+    """
+    Добавляет нового доставщика в таблицу Deliverer.
+
+    :param session: Сессия базы данных.
+    :param telegram_id: Уникальный Telegram ID доставщика.
+    :param telegram_name: Имя пользователя в Telegram.
+    :param first_name: Имя доставщика.
+    :param last_name: Фамилия доставщика.
+    :param phone: Телефон доставщика.
+    """
+    new_deliverer = Deliverer(
+        telegram_id=telegram_id,
+        telegram_name=telegram_name,
+        first_name=first_name,
+        last_name=last_name,
+        phone=phone,
+    )
+    session.add(new_deliverer)
+    try:
+        await session.commit()
+    except IntegrityError as e:
+        await session.rollback()
+        raise ValueError(
+            f"Доставщик с telegram_id={telegram_id} уже существует."
+        ) from e
+
+
+async def orm_get_deliverers(session: AsyncSession, telegram_id: int = None):
+    """
+    Возвращает список всех доставщиков или одного доставщика по telegram_id.
+
+    :param session: Сессия базы данных.
+    :param telegram_id: Telegram ID доставщика (опционально).
+    :return: Список доставщиков, один доставщик (если указан telegram_id) или False, если доставщик не найден.
+    """
+    query = select(Deliverer)
+    if telegram_id is not None:
+        query = query.where(Deliverer.telegram_id == telegram_id)
+
+    result = await session.execute(query)
+    if telegram_id is not None:
+        deliverer = result.scalar_one_or_none()
+        if deliverer is None:
+            return False  # Возвращаем False, если доставщик не найден
+        return deliverer
+    return result.scalars().all()  # Возвращаем список доставщиков
+
+
+async def orm_update_deliverer(session: AsyncSession, telegram_id: int, data: dict):
+    """
+    Обновляет данные доставщика в таблице Deliverer.
+
+    :param session: Сессия базы данных.
+    :param telegram_id: Уникальный Telegram ID доставщика.
+    :param telegram_name: Имя пользователя в Telegram.
+    :param first_name: Имя доставщика.
+    :param last_name: Фамилия доставщика.
+    :param phone: Телефон доставщика.
+    """
+    query = update(Deliverer).where(Deliverer.telegram_id == telegram_id).values(**data)
+    await session.execute(query)
+    await session.commit()
+
+
+############ работа с отзывами #######################################
+
+
+async def orm_add_review(
+    session: AsyncSession,
+    user_id: int,
+    deliverer_id: int,
+    order_id: int,
+    rating: int,
+    text: str = None,
+):
+    """
+    Добавляет отзыв в базу данных.
+    """
+    new_review = DelivererReview(
+        user_id=user_id,
+        deliverer_id=deliverer_id,
+        order_id=order_id,
+        rating=rating,
+        text=text,
+    )
+    session.add(new_review)
+    await session.commit()
+
+
+async def orm_update_review(session: AsyncSession, data: dict):
+    """
+    Обновляет отзыв в базе данных. Если отзыв не найден, выбрасывает исключение.
+
+    :param session: Сессия базы данных.
+    :param data: Словарь с данными для обновления.
+                 Ключи должны соответствовать полям модели Reviews.
+    """
+    # Проверяем, существует ли отзыв
+    query = select(DelivererReview).where(
+        DelivererReview.user_id == data["user_id"],
+        DelivererReview.target_id == data["target_id"],
+        DelivererReview.order_id == data["order_id"],
+    )
+    result = await session.execute(query)
+    review = result.scalar_one_or_none()
+
+    if not review:
+        raise NoResultFound("Отзыв не найден. Обновление невозможно.")
+
+    # Выполняем обновление
+    update_query = (
+        update(DelivererReview)
+        .where(
+            DelivererReview.user_id == data["user_id"],
+            DelivererReview.deliverer_id == data["deliverer_id"],
+            DelivererReview.order_id == data["order_id"],
+        )
+        .values(**data)
+        .execution_options(synchronize_session="fetch")
+    )
+    await session.execute(update_query)
+    await session.commit()
+
+
+async def orm_get_deliverer_reviews_and_update_summary(
+    session: AsyncSession, deliverer_id: int
+) -> float:
+    """
+    Извлекает все оценки доставщика, вычисляет среднее арифметическое и обновляет rating_summary.
+
+    :param session: Сессия базы данных.
+    :param deliverer_id: ID доставщика.
+    :return: Среднее арифметическое рейтинга.
+    """
+    # Получаем все оценки доставщика
+    query = select(DelivererReview.rating).where(
+        DelivererReview.deliverer_id == deliverer_id
+    )
+    result = await session.execute(query)
+    ratings = result.scalars().all()
+
+    if not ratings:
+        raise ValueError(f"Для доставщика с ID {deliverer_id} нет отзывов.")
+
+    # Вычисляем среднее арифметическое
+    average_rating = sum(ratings) / len(ratings)
+
+    # Обновляем поле rating_summary в таблице Deliverer
+    update_query = (
+        update(Deliverer)
+        .where(Deliverer.id == deliverer_id)
+        .values(rating_summary=average_rating)
+        .execution_options(synchronize_session="fetch")
+    )
+    await session.execute(update_query)
+    await session.commit()
+
+    return average_rating

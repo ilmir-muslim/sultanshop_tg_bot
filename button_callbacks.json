@@ -50,5 +50,70 @@
             "image": "AgACAgIAAxkBAAM_Z_swkFR_SqbXis2Oj4qi5dZIVQYAAkbsMRvvi9lLYTHhz4LJG8kBAAMCAAN5AAM2BA"
         },
         "chat_id": -1002130857709
+    },
+    "buy:ecca6c8108c731e2b2be293262c9e3a4:6": {
+        "item": {
+            "id": 6,
+            "name": "Оливковое масло синайское, 500 гр",
+            "description": "Польза оливкового масла\nОливковое масло — продукт, оздоравливающий организм со всех сторон. Поддерживает сердечно-сосудистую систему и ЖКТ, снижает риск воспалений и развития диабета, предотвращает артрит, инсульт и язву желудка, помогает похудеть и даже сберечь ментальное здоровье — достаточно употреблять 1–2 столовые ложки в день. Выбирать нужно Добавить его в рацион нетрудно, просто начните готовить на нем что угодно.",
+            "category": 5,
+            "seller": 2,
+            "purchase_price": 700.0,
+            "price": 700.0,
+            "image": "AgACAgIAAxkBAAID2mgbkdK_gEgSHZ7Lci47pKlZVhWEAALJ9DEbllrhSEm5Nh0Ej5u7AQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:8371f29cea0e1222847a8c38c5e567c0:7": {
+        "item": {
+            "id": 7,
+            "name": "Зона доставки 1",
+            "description": "Nasr City (Арба уа Нус, Макарам, Мадарис)",
+            "category": 6,
+            "seller": 1,
+            "purchase_price": 80.0,
+            "price": 80.0,
+            "image": "AgACAgIAAxkBAAIED2ggSmRPVjzuW2EGSGXzWz9Rnd4zAALZ8TEb_IoBSQTuqJzIzEEHAQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:6903b6b01540c58318d36dcef8abcea0:8": {
+        "item": {
+            "id": 8,
+            "name": "Зона доставки 2",
+            "description": "Downtown (Васт эль-Балад, Тахрир, Талат Харб), Garden City, Zamalek, Dokki (Докки, Бахтат), Mohandessin (Мухандисин, Шараа Гамаа), Heliopolis (Рокси, Сарбат, Кубри эль-Кубба), El Nozha, Sheraton Heliopolis (Шератон), El Marg (Марг), New Cairo (Тагамоа, AUC, Парк Молл)",
+            "category": 6,
+            "seller": 1,
+            "purchase_price": 100.0,
+            "price": 100.0,
+            "image": "AgACAgIAAxkBAAIED2ggSmRPVjzuW2EGSGXzWz9Rnd4zAALZ8TEb_IoBSQTuqJzIzEEHAQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:afc8cd0df9dc5a8abba88ebcfc0d8e35:9": {
+        "item": {
+            "id": 9,
+            "name": "Зона доставки 3",
+            "description": "Maadi (Саррайят, Дегла, Улица 9), Shubra, El Basatin",
+            "category": 6,
+            "seller": 1,
+            "purchase_price": 150.0,
+            "price": 150.0,
+            "image": "AgACAgIAAxkBAAIED2ggSmRPVjzuW2EGSGXzWz9Rnd4zAALZ8TEb_IoBSQTuqJzIzEEHAQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:00009a861935757b1403bdb8cb8b1d02:10": {
+        "item": {
+            "id": 10,
+            "name": "Зона доставки 4",
+            "description": "Faisal (Фейсал)",
+            "category": 6,
+            "seller": 1,
+            "purchase_price": 200.0,
+            "price": 200.0,
+            "image": "AgACAgIAAxkBAAIED2ggSmRPVjzuW2EGSGXzWz9Rnd4zAALZ8TEb_IoBSQTuqJzIzEEHAQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
     }
 }

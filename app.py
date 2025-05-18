@@ -3,31 +3,36 @@ import os
 import json
 import logging
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from dotenv import find_dotenv, load_dotenv
 
+
 load_dotenv(find_dotenv())
 
+from config import ADMIN_FILE
 from middlewares.db import DataBaseSession
 
-from database.engine import create_db, drop_db, session_maker
+from database.engine import create_db, session_maker
 
 from handlers.user_private import user_private_router
 from handlers.user_group import send_random_item_periodically, user_group_router
 from handlers.admin_private import admin_router
 from handlers.menu_processing import menu_progressing_router
+from handlers.deliverer_private import deliverer_private_router
 
 # from common.bot_cmds_list import private
 logging.basicConfig(
-    level=logging.DEBUG,  # Уровень логирования (можно изменить на DEBUG для более подробных логов)
+    level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(message)s",  # Формат логов
     handlers=[
-        logging.FileHandler("app.log", encoding="utf-8"),  # Логи сохраняются в файл app.log
-        logging.StreamHandler()  # Логи также выводятся в терминал
-    ]
+        logging.FileHandler(
+            "app.log", encoding="utf-8"
+        ),  # Логи сохраняются в файл app.log
+        logging.StreamHandler(),  # Логи также выводятся в терминал
+    ],
 )
 
 # Пример использования логирования
@@ -40,12 +45,18 @@ bot = Bot(
     default=DefaultBotProperties(parse_mode=ParseMode.HTML),
 )
 
-if os.path.exists("admins.json"):
-    with open("admins.json", "r", encoding="utf-8") as file:
-        admin_list = json.load(file)
-        bot.my_admins_list = admin_list
-else:
-    bot.my_admins_list = []
+
+async def initialize_bot_data(bot: Bot, session_maker):
+    """
+    Инициализация данных для бота, таких как список администраторов и доставщиков.
+    """
+    if os.path.exists(ADMIN_FILE):
+        with open(ADMIN_FILE, "r", encoding="utf-8") as file:
+            admin_list = json.load(file)
+            bot.my_admins_list = admin_list
+    else:
+        bot.my_admins_list = []
+
 
 
 dp = Dispatcher()
@@ -54,6 +65,7 @@ dp.include_router(user_private_router)
 dp.include_router(user_group_router)
 dp.include_router(admin_router)
 dp.include_router(menu_progressing_router)
+dp.include_router(deliverer_private_router)
 
 
 async def on_startup(bot):
@@ -62,7 +74,10 @@ async def on_startup(bot):
 
     await create_db()
 
+    await initialize_bot_data(bot, session_maker)
+
     asyncio.create_task(send_random_item_periodically(session_maker, bot))
+
 
 async def on_shutdown(bot):
     print("бот лег")
