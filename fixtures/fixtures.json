@@ -1,0 +1,220 @@
+{
+  "order_item": [],
+  "deliverer_reviews": [],
+  "cart": [],
+  "feedback_book": [],
+  "sellers": [
+    {
+      "id": 1,
+      "name": "султаншоп",
+      "description": "мы",
+      "phone": "+79991234567",
+      "address": "каир",
+      "created": "2025-04-13T03:32:34.476656",
+      "updated": "2025-04-13T03:32:34.476656"
+    },
+    {
+      "id": 2,
+      "name": "musafir",
+      "description": null,
+      "phone": null,
+      "address": null,
+      "created": "2025-05-07T15:28:10.580851",
+      "updated": "2025-05-07T15:28:10.580851"
+    },
+    {
+      "id": 3,
+      "name": "Магазин A",
+      "description": "Лучшие товары для вас",
+      "phone": "+1234567890",
+      "address": "ул. Примерная, д. 1",
+      "created": "2025-05-19T18:21:40.223940",
+      "updated": "2025-05-19T18:21:40.223940"
+    },
+    {
+      "id": 4,
+      "name": "Магазин B",
+      "description": "Доставка на дом",
+      "phone": "+9876543210",
+      "address": "ул. Примерная, д. 2",
+      "created": "2025-05-19T18:21:40.223940",
+      "updated": "2025-05-19T18:21:40.223940"
+    }
+  ],
+  "category": [
+    {
+      "id": 4,
+      "name": "оргтехника",
+      "created": "2025-04-13T03:31:46.867319",
+      "updated": "2025-04-13T03:31:46.867319"
+    },
+    {
+      "id": 5,
+      "name": "продукты",
+      "created": "2025-04-16T15:25:11.157041",
+      "updated": "2025-04-16T15:25:11.157041"
+    },
+    {
+      "id": 6,
+      "name": "Доставка/Курьер",
+      "created": "2025-05-11T06:35:51.598557",
+      "updated": "2025-05-11T06:35:51.598557"
+    },
+    {
+      "id": 9,
+      "name": "Электроника",
+      "created": "2025-05-19T18:21:36.375977",
+      "updated": "2025-05-19T18:21:36.375977"
+    },
+    {
+      "id": 10,
+      "name": "Одежда",
+      "created": "2025-05-19T18:21:36.375977",
+      "updated": "2025-05-19T18:21:36.375977"
+    },
+    {
+      "id": 11,
+      "name": "Продукты питания",
+      "created": "2025-05-19T18:21:36.375977",
+      "updated": "2025-05-19T18:21:36.375977"
+    }
+  ],
+  "wait_list": [],
+  "Orders": [],
+  "banner": [
+    {
+      "id": 1,
+      "name": "main",
+      "image": "AgACAgIAAxkBAAIB42f_ec2Bo1dpcEc0O6ffKIVYH3zmAALS-jEbBf0BSPMMquBVY9pEAQADAgADeQADNgQ",
+      "description": "Добро пожаловать!",
+      "created": "2025-04-13T03:27:53.097582",
+      "updated": "2025-04-16T09:35:24.654438"
+    },
+    {
+      "id": 5,
+      "name": "catalog",
+      "image": "AgACAgIAAxkBAAIB42f_ec2Bo1dpcEc0O6ffKIVYH3zmAALS-jEbBf0BSPMMquBVY9pEAQADAgADeQADNgQ",
+      "description": "Категории:",
+      "created": "2025-04-13T03:27:53.097582",
+      "updated": "2025-04-16T09:36:36.061138"
+    },
+    {
+      "id": 6,
+      "name": "cart",
+      "image": "AgACAgIAAxkBAAIB42f_ec2Bo1dpcEc0O6ffKIVYH3zmAALS-jEbBf0BSPMMquBVY9pEAQADAgADeQADNgQ",
+      "description": "В корзине ничего нет!",
+      "created": "2025-04-13T03:27:53.097582",
+      "updated": "2025-04-16T09:36:49.104723"
+    },
+    {
+      "id": 2,
+      "name": "about",
+      "image": "AgACAgIAAxkBAAIB42f_ec2Bo1dpcEc0O6ffKIVYH3zmAALS-jEbBf0BSPMMquBVY9pEAQADAgADeQADNgQ",
+      "description": "Магазин Султан. Товары и услуги\nКонтакты нашего магазина:\nТелефон: +201026282854\nТелеграм: @Vmisreabusultan, @Ilmir_muslim",
+      "created": "2025-04-13T03:27:53.097582",
+      "updated": "2025-04-16T09:35:40.551717"
+    },
+    {
+      "id": 4,
+      "name": "shipping",
+      "image": "AgACAgIAAxkBAAIDhGgbdHZwUgABEWrLaYK7qRIqj_5wyQACp_IxG5Za4Uhdj5IoitBCEgEAAwIAA3gAAzYE",
+      "description": "<b>Для самовывоза:</b>  \n✅ дождитесь сообщения о том что ваш заказ готов к выдаче  \n✅ приходите к нам в магазин по адресу: <a href=\"https://maps.app.goo.gl/bEAY1Zy45zn28A4e9?g_st=it\">https://maps.app.goo.gl/bEAY1Zy45zn28A4e9?g_st=it</a>\n",
+      "created": "2025-04-13T03:27:53.097582",
+      "updated": "2025-05-07T14:55:50.542358"
+    },
+    {
+      "id": 3,
+      "name": "orders",
+      "image": "AgACAgIAAxkBAAIC9mgOSqg-bk-bQ4E8celCOiZ8-a5YAAKe9jEb7vFwSLOZjxQqbFmeAQADAgADeQADNgQ",
+      "description": "У вас нет активных заказов.",
+      "created": "2025-04-13T03:27:53.097582",
+      "updated": "2025-05-18T13:07:29.066231"
+    }
+  ],
+  "deliverer": [
+    {
+      "id": 3,
+      "telegram_id": 6903748145,
+      "telegram_name": "Ilmir_muslim",
+      "first_name": "Ильмир",
+      "last_name": "Гильмияров",
+      "phone": "+201011255145",
+      "is_active": true,
+      "created": "2025-05-14T16:15:48.852950",
+      "updated": "2025-05-16T05:03:24.275572"
+    }
+  ],
+  "product": [
+    {
+      "id": 14,
+      "name": "Смартфон",
+      "description": "Современный смартфон с хорошей камерой",
+      "purchase_price": 500.0,
+      "price": 600.0,
+      "image": "smartphone.jpg",
+      "category_id": 9,
+      "seller_id": 1,
+      "is_available": true,
+      "created": "2025-05-19T18:22:45.840053",
+      "updated": "2025-05-19T18:22:45.840053"
+    },
+    {
+      "id": 15,
+      "name": "Футболка",
+      "description": "Хлопковая футболка",
+      "purchase_price": 10.0,
+      "price": 15.0,
+      "image": "tshirt.jpg",
+      "category_id": 10,
+      "seller_id": 2,
+      "is_available": true,
+      "created": "2025-05-19T18:22:45.840053",
+      "updated": "2025-05-19T18:22:45.840053"
+    },
+    {
+      "id": 16,
+      "name": "Яблоки",
+      "description": "Свежие яблоки",
+      "purchase_price": 2.0,
+      "price": 3.0,
+      "image": "apples.jpg",
+      "category_id": 11,
+      "seller_id": 1,
+      "is_available": true,
+      "created": "2025-05-19T18:22:45.840053",
+      "updated": "2025-05-19T18:22:45.840053"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "user_id": 6903748145,
+      "first_name": "Ильмир",
+      "last_name": "Гильмияров",
+      "phone": "+201234567890",
+      "address": "вввленинград спб . ру",
+      "created": "2025-04-23T01:33:34.212479",
+      "updated": "2025-05-15T10:37:13.279844"
+    },
+    {
+      "id": 2,
+      "user_id": 1001,
+      "first_name": "Иван",
+      "last_name": "Иванов",
+      "phone": "+79001112233",
+      "address": "Москва, ул. Ленина, д. 10",
+      "created": "2025-05-19T18:21:43.391936",
+      "updated": "2025-05-19T18:21:43.391936"
+    },
+    {
+      "id": 3,
+      "user_id": 1002,
+      "first_name": "Мария",
+      "last_name": "Петрова",
+      "phone": "+79004445566",
+      "address": "Санкт-Петербург, ул. Ленина, д. 20",
+      "created": "2025-05-19T18:21:43.391936",
+      "updated": "2025-05-19T18:21:43.391936"
+    }
+  ]
+}

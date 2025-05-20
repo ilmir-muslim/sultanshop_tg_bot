@@ -11,11 +11,11 @@ from database.models import (
     Category,
     Deliverer,
     DelivererReview,
-    Order,
+    Orders,
     OrderItem,
     Product,
     Seller,
-    User,
+    Users,
     WaitList,
 )
 
@@ -68,22 +68,22 @@ async def orm_update_orders_banner_description(session: AsyncSession, user_id: i
     # Выполняем запрос для получения заказов пользователя с соединением связанных таблиц
     query = (
         select(
-            Order.id,
-            Order.delivery_address,
-            Order.status,
-            Order.total_price,
+            Orders.id,
+            Orders.delivery_address,
+            Orders.status,
+            Orders.total_price,
             OrderItem.quantity,
             Product.name,
             Product.price,
             Deliverer.first_name,  # Добавляем поле из таблицы Deliverer
             Deliverer.phone,  # Добавляем поле из таблицы Deliverer
         )
-        .join(Order.items)  # Соединяем с таблицей OrderItem
+        .join(Orders.items)  # Соединяем с таблицей OrderItem
         .join(OrderItem.product)  # Соединяем с таблицей Product
         .outerjoin(
-            Order.deliverer
+            Orders.deliverer
         )  # Соединяем с таблицей Deliverer (outerjoin для необязательной связи)
-        .where(Order.user_id == user_id, Order.status.in_(["Оформлен", "В работе"]))
+        .where(Orders.user_id == user_id, Orders.status.in_(["Оформлен", "В работе"]))
     )
     result = await session.execute(query)
     user_orders = result.fetchall()
@@ -282,11 +282,11 @@ async def orm_add_user(
     last_name: str | None = None,
     phone: str | None = None,
 ):
-    query = select(User).where(User.user_id == user_id)
+    query = select(Usera).where(Users.user_id == user_id)
     result = await session.execute(query)
     if result.first() is None:
         session.add(
-            User(
+            Users(
                 user_id=user_id, first_name=first_name, last_name=last_name, phone=phone
             )
         )
@@ -294,14 +294,14 @@ async def orm_add_user(
 
 
 async def orm_get_user(session: AsyncSession, user_id: int):
-    query = select(User).where(User.user_id == user_id)
+    query = select(Users).where(Users.user_id == user_id)
     result = await session.execute(query)
     return result.scalar()
 
 
 async def orm_update_user(session: AsyncSession, user_id: int, data: dict):
     # Получаем текущие данные пользователя
-    result = await session.execute(select(User).where(User.user_id == user_id))
+    result = await session.execute(select(Users).where(Users.user_id == user_id))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -311,11 +311,11 @@ async def orm_update_user(session: AsyncSession, user_id: int, data: dict):
     update_data = {
         key: value
         for key, value in data.items()
-        if hasattr(User, key) and value is not None
+        if hasattr(Users, key) and value is not None
     }
 
     if update_data:  # Обновляем только если есть данные
-        query = update(User).where(User.user_id == user_id).values(**update_data)
+        query = update(Users).where(Users.user_id == user_id).values(**update_data)
         await session.execute(query)
         await session.commit()
 
@@ -415,7 +415,7 @@ async def orm_create_order(
     user_id: int, 
     delivery_address: str, 
     phone_number: str
-) -> Order:
+) -> Orders:
     # 1. Получаем товары из корзины с загруженными продуктами
     query = (
         select(Cart)
@@ -432,7 +432,7 @@ async def orm_create_order(
     total_price = sum(item.product.price * item.quantity for item in cart_items)
 
     # 3. Создаём заказ 
-    new_order = Order(
+    new_order = Orders(
         user_id=user_id,
         delivery_address=delivery_address,
         total_price=total_price,
@@ -442,7 +442,7 @@ async def orm_create_order(
     await session.flush()  # Получаем ID заказа
 
     # 4. Создаём OrderItem 
-    order_items = [
+    order_item = [
         OrderItem(
             order_id=new_order.id, 
             product_id=item.product_id, 
@@ -450,7 +450,7 @@ async def orm_create_order(
         )
         for item in cart_items
     ]
-    session.add_all(order_items)
+    session.add_all(order_item)
 
     # 5. Очищаем корзину 
     delete_query = delete(Cart).where(Cart.user_id == user_id)
@@ -458,11 +458,11 @@ async def orm_create_order(
 
     # 6. Дополнительно загружаем связанные данные перед возвратом
     full_order = await session.execute(
-        select(Order)
-        .where(Order.id == new_order.id)
+        select(Orders)
+        .where(Orders.id == new_order.id)
         .options(
-            selectinload(Order.user),
-            selectinload(Order.items).joinedload(OrderItem.product)
+            selectinload(Orders.user),
+            selectinload(Orders.items).joinedload(OrderItem.product)
         )
     )
     full_order = full_order.scalar_one()
@@ -473,11 +473,11 @@ async def orm_create_order(
 
 async def orm_get_orders(session: AsyncSession, status: str = None):
     query = (
-        select(Order)
-        .where(Order.status == status)
+        select(Orders)
+        .where(Orders.status == status)
         .options(
-            selectinload(Order.user),  # Предзагрузка данных пользователя
-            selectinload(Order.items).selectinload(
+            selectinload(Orders.user),  # Предзагрузка данных пользователя
+            selectinload(Orders.items).selectinload(
                 OrderItem.product
             ),  # Предзагрузка товаров
         )
@@ -488,9 +488,9 @@ async def orm_get_orders(session: AsyncSession, status: str = None):
 
 async def orm_get_user_orders(session: AsyncSession, user_id: int):
     query = (
-        select(Order)
-        .where(Order.user_id == user_id, Order.status.in_(["Оформлен", "В работе"]))
-        .options(joinedload(Order.items).joinedload(OrderItem.product))
+        select(Orders)
+        .where(Orders.user_id == user_id, Orders.status.in_(["Оформлен", "В работе"]))
+        .options(joinedload(Orders.items).joinedload(OrderItem.product))
     )
     result = await session.execute(query)
     return result.scalars().all()
@@ -507,8 +507,8 @@ async def orm_update_order(session: AsyncSession, order_id: int, data: dict):
     :return: Обновлённый объект Order.
     """
     query = (
-        update(Order)
-        .where(Order.id == order_id)
+        update(Orders)
+        .where(Orders.id == order_id)
         .values(**data)
         .execution_options(synchronize_session="fetch")
     )

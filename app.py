@@ -15,7 +15,7 @@ load_dotenv(find_dotenv())
 from config import ADMIN_FILE
 from middlewares.db import DataBaseSession
 
-from database.engine import create_db, session_maker
+from database.engine import create_db, drop_db, session_maker
 
 from handlers.user_private import user_private_router
 from handlers.user_group import send_random_item_periodically, user_group_router
@@ -58,7 +58,6 @@ async def initialize_bot_data(bot: Bot, session_maker):
         bot.my_admins_list = []
 
 
-
 dp = Dispatcher()
 
 dp.include_router(user_private_router)
@@ -69,8 +68,6 @@ dp.include_router(deliverer_private_router)
 
 
 async def on_startup(bot):
-
-    # await drop_db()
 
     await create_db()
 

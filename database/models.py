@@ -8,6 +8,7 @@ from sqlalchemy import (
     Text,
     BigInteger,
     func,
+    inspect,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -17,6 +18,9 @@ class Base(DeclarativeBase):
     updated: Mapped[DateTime] = mapped_column(
         DateTime, default=func.now(), onupdate=func.now()
     )
+
+    def to_dict(self):
+        return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
 
 
 class Banner(Base):
@@ -53,11 +57,11 @@ class Product(Base):
     is_available: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     category: Mapped["Category"] = relationship(backref="product")
-    order_items: Mapped[list["OrderItem"]] = relationship(back_populates="product")
+    order_item: Mapped[list["OrderItem"]] = relationship(back_populates="product")
     seller: Mapped["Seller"] = relationship(backref="product")
 
 
-class User(Base):
+class Users(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -90,7 +94,7 @@ class Cart(Base):
     )
     quantity: Mapped[int]
 
-    user: Mapped["User"] = relationship(backref="cart")
+    user: Mapped["Users"] = relationship(backref="cart")
     product: Mapped["Product"] = relationship(backref="cart")
 
 
@@ -105,12 +109,12 @@ class WaitList(Base):
         ForeignKey("product.id", ondelete="CASCADE"), nullable=False
     )
 
-    user: Mapped["User"] = relationship(backref="wait_list")
+    user: Mapped["Users"] = relationship(backref="wait_list")
     product: Mapped["Product"] = relationship(backref="wait_list")
 
 
-class Order(Base):
-    __tablename__ = "order"
+class Orders(Base):
+    __tablename__ = "Orders"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
@@ -123,12 +127,12 @@ class Order(Base):
         ForeignKey("deliverer.id", ondelete="SET NULL"), nullable=True
     )
 
-    user: Mapped["User"] = relationship(backref="order")
+    user: Mapped["Users"] = relationship(backref="Orders")
     items: Mapped[list["OrderItem"]] = relationship(
         back_populates="order", cascade="all, delete-orphan"
     )
-    deliverer: Mapped["Deliverer"] = relationship(  # Оставлено как есть
-        backref="orders", foreign_keys=[deliverer_id]
+    deliverer: Mapped["Deliverer"] = relationship(
+        backref="Orders", foreign_keys=[deliverer_id]
     )
 
 
@@ -137,7 +141,7 @@ class OrderItem(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     order_id: Mapped[int] = mapped_column(
-        ForeignKey("order.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("Orders.id", ondelete="CASCADE"), nullable=False
     )
     product_id: Mapped[int] = mapped_column(
         ForeignKey("product.id", ondelete="CASCADE"), nullable=False
@@ -145,8 +149,8 @@ class OrderItem(Base):
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # Связи
-    order: Mapped["Order"] = relationship(back_populates="items")
-    product: Mapped["Product"] = relationship(back_populates="order_items")
+    order: Mapped["Orders"] = relationship(back_populates="items")
+    product: Mapped["Product"] = relationship(back_populates="order_item")
 
 
 class Deliverer(Base):
@@ -175,7 +179,7 @@ class DelivererReview(Base):
     rating_summary: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=True)
 
-    user: Mapped["User"] = relationship(backref="deliverer_reviews")
+    user: Mapped["Users"] = relationship(backref="deliverer_reviews")
     deliverer: Mapped["Deliverer"] = relationship(backref="deliverer_reviews")
 
 
@@ -190,4 +194,4 @@ class FeedbackBook(Base):
 
     text: Mapped[str] = mapped_column(Text, nullable=False)
 
-    user: Mapped["User"] = relationship(backref="feedback_book", uselist=False)
+    user: Mapped["Users"] = relationship(backref="feedback_book", uselist=False)

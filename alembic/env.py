@@ -13,6 +13,7 @@ if config.config_file_name is not None:
 
 # Укажите вашу метаинформацию для автогенерации
 target_metadata = Base.metadata
+print("Таблицы в моделях:", list(Base.metadata.tables.keys()))
 
 
 def run_migrations_offline() -> None:

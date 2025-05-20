@@ -1,5 +1,6 @@
 import logging
 from aiogram import F, Router, types
+from aiogram.dispatcher import router
 from aiogram.filters import Command, StateFilter, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -26,6 +27,9 @@ from database.orm_query import (
 from filters.callback_filters import StatusCallback
 from filters.chat_types import ChatTypeFilter, IsAdmin
 
+
+
+from fixtures.fixtures_utils import dump_fixtures, load_fixtures
 from kbds.inline import get_callback_btns, get_status_keyboard
 from kbds.reply import get_keyboard
 from utils.json_operations import save_added_goods
@@ -683,3 +687,22 @@ async def handle_status_callback(
         )
 
     await callback.answer()
+
+
+######## Работа с фикстурами ##########
+
+@admin_router.message(Command("dumpfix"))
+async def dump_fixtures_handler(message: types.Message, session: AsyncSession):
+    """
+    Команда для создания фикстур в базе данных.
+    """
+    await dump_fixtures(session)
+    await message.answer("Фикстуры успешно созданы.")
+
+@admin_router.message(Command("loadfix"))
+async def load_fixtures_handler(message: types.Message, session: AsyncSession):
+    """
+    Команда для загрузки фикстур в базу данных.
+    """
+    await load_fixtures(session)
+    await message.answer("Фикстуры успешно загружены.")

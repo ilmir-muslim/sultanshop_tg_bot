@@ -1,118 +1,40 @@
 {
-    "buy:aba69afbd99b1bde4b9e6fba45e687ed:3": {
+    "buy:ffa213b9c5383d6f2d852bbe61fed5e6:15": {
         "item": {
-            "id": 3,
-            "name": "чай имбирьный",
-            "description": "полезный прозрачный чай",
-            "category": 5,
-            "seller": 1,
-            "purchase_price": 10.0,
-            "price": 15.0,
-            "image": "AgACAgIAAxkBAAICOmf_zLmx1LtPt0Ha9L1oag-zdwuIAALe_TEbBf0BSDtnhzH6S5E2AQADAgADeQADNgQ"
-        },
-        "chat_id": -1002130857709
-    },
-    "buy:de31fe26f1f87369843c945b5af0d94a:4": {
-        "item": {
-            "id": 4,
-            "name": "товар с очень длинным названием например Копчёный сыр \"Косичка\"",
-            "description": "варвоарыва",
-            "category": 5,
-            "seller": 1,
-            "purchase_price": 10.0,
-            "price": 10.0,
-            "image": "AgACAgIAAxkBAAIC52gM76r62cKx0VQrGOINBObILadbAAJw7DEbjbFpSHBPTP85iZ4dAQADAgADeQADNgQ"
-        },
-        "chat_id": -1002130857709
-    },
-    "buy:802787f413c4b29a41e16de79d5241d4:2": {
-        "item": {
-            "id": 2,
-            "name": "чай каркаде",
-            "description": "красный чай",
-            "category": 5,
-            "seller": 1,
-            "purchase_price": 10.0,
-            "price": 15.0,
-            "image": "AgACAgIAAxkBAAICJ2f_zEAlNov-dQ1Fc5UwcbxPqGc1AAK47TEb1KX5Sx0V5Xf3FWj5AQADAgADeQADNgQ"
-        },
-        "chat_id": -1002130857709
-    },
-    "buy:ab20bd626b3eac5f90e79e543d1a9c57:1": {
-        "item": {
-            "id": 1,
-            "name": "мышка",
-            "description": "моя сломанная мышка",
-            "category": 4,
-            "seller": 1,
-            "purchase_price": 15.3,
-            "price": 20.0,
-            "image": "AgACAgIAAxkBAAM_Z_swkFR_SqbXis2Oj4qi5dZIVQYAAkbsMRvvi9lLYTHhz4LJG8kBAAMCAAN5AAM2BA"
-        },
-        "chat_id": -1002130857709
-    },
-    "buy:ecca6c8108c731e2b2be293262c9e3a4:6": {
-        "item": {
-            "id": 6,
-            "name": "Оливковое масло синайское, 500 гр",
-            "description": "Польза оливкового масла\nОливковое масло — продукт, оздоравливающий организм со всех сторон. Поддерживает сердечно-сосудистую систему и ЖКТ, снижает риск воспалений и развития диабета, предотвращает артрит, инсульт и язву желудка, помогает похудеть и даже сберечь ментальное здоровье — достаточно употреблять 1–2 столовые ложки в день. Выбирать нужно Добавить его в рацион нетрудно, просто начните готовить на нем что угодно.",
-            "category": 5,
+            "id": 15,
+            "name": "Футболка",
+            "description": "Хлопковая футболка",
+            "category": 10,
             "seller": 2,
-            "purchase_price": 700.0,
-            "price": 700.0,
-            "image": "AgACAgIAAxkBAAID2mgbkdK_gEgSHZ7Lci47pKlZVhWEAALJ9DEbllrhSEm5Nh0Ej5u7AQADAgADeQADNgQ"
+            "purchase_price": 10.0,
+            "price": 15.0,
+            "image": "tshirt.jpg"
         },
         "chat_id": -1002130857709
     },
-    "buy:8371f29cea0e1222847a8c38c5e567c0:7": {
+    "buy:f9a74f707a9044f6f1583ad878f2a24e:14": {
         "item": {
-            "id": 7,
-            "name": "Зона доставки 1",
-            "description": "Nasr City (Арба уа Нус, Макарам, Мадарис)",
-            "category": 6,
+            "id": 14,
+            "name": "Смартфон",
+            "description": "Современный смартфон с хорошей камерой",
+            "category": 9,
             "seller": 1,
-            "purchase_price": 80.0,
-            "price": 80.0,
-            "image": "AgACAgIAAxkBAAIED2ggSmRPVjzuW2EGSGXzWz9Rnd4zAALZ8TEb_IoBSQTuqJzIzEEHAQADAgADeQADNgQ"
+            "purchase_price": 500.0,
+            "price": 600.0,
+            "image": "smartphone.jpg"
         },
         "chat_id": -1002130857709
     },
-    "buy:6903b6b01540c58318d36dcef8abcea0:8": {
+    "buy:77b8d4a70b36d1434f32ef6f2c140bb9:16": {
         "item": {
-            "id": 8,
-            "name": "Зона доставки 2",
-            "description": "Downtown (Васт эль-Балад, Тахрир, Талат Харб), Garden City, Zamalek, Dokki (Докки, Бахтат), Mohandessin (Мухандисин, Шараа Гамаа), Heliopolis (Рокси, Сарбат, Кубри эль-Кубба), El Nozha, Sheraton Heliopolis (Шератон), El Marg (Марг), New Cairo (Тагамоа, AUC, Парк Молл)",
-            "category": 6,
+            "id": 16,
+            "name": "Яблоки",
+            "description": "Свежие яблоки",
+            "category": 11,
             "seller": 1,
-            "purchase_price": 100.0,
-            "price": 100.0,
-            "image": "AgACAgIAAxkBAAIED2ggSmRPVjzuW2EGSGXzWz9Rnd4zAALZ8TEb_IoBSQTuqJzIzEEHAQADAgADeQADNgQ"
-        },
-        "chat_id": -1002130857709
-    },
-    "buy:afc8cd0df9dc5a8abba88ebcfc0d8e35:9": {
-        "item": {
-            "id": 9,
-            "name": "Зона доставки 3",
-            "description": "Maadi (Саррайят, Дегла, Улица 9), Shubra, El Basatin",
-            "category": 6,
-            "seller": 1,
-            "purchase_price": 150.0,
-            "price": 150.0,
-            "image": "AgACAgIAAxkBAAIED2ggSmRPVjzuW2EGSGXzWz9Rnd4zAALZ8TEb_IoBSQTuqJzIzEEHAQADAgADeQADNgQ"
-        },
-        "chat_id": -1002130857709
-    },
-    "buy:00009a861935757b1403bdb8cb8b1d02:10": {
-        "item": {
-            "id": 10,
-            "name": "Зона доставки 4",
-            "description": "Faisal (Фейсал)",
-            "category": 6,
-            "seller": 1,
-            "purchase_price": 200.0,
-            "price": 200.0,
-            "image": "AgACAgIAAxkBAAIED2ggSmRPVjzuW2EGSGXzWz9Rnd4zAALZ8TEb_IoBSQTuqJzIzEEHAQADAgADeQADNgQ"
+            "purchase_price": 2.0,
+            "price": 3.0,
+            "image": "apples.jpg"
         },
         "chat_id": -1002130857709
     }
