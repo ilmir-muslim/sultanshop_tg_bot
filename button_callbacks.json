@@ -37,5 +37,200 @@
             "image": "apples.jpg"
         },
         "chat_id": -1002130857709
+    },
+    "buy:bbd9967b3a3e31e22e0ec9e45de06b8b:18": {
+        "item": {
+            "id": 18,
+            "name": "Зона 2",
+            "description": "Downtown (Васт эль-Балад, Тахрир, Талат Харб), Garden City, Zamalek, Dokki (Докки, Бахтат), Mohandessin (Мухандисин, Шараа Гамаа), Heliopolis (Рокси, Сарбат, Кубри эль-Кубба), El Nozha, Sheraton Heliopolis (Шератон), El Marg (Марг), New Cairo (Тагамоа, AUC, Парк Молл)",
+            "category": 1,
+            "seller": 1,
+            "purchase_price": 100.0,
+            "price": 100.0,
+            "image": "AgACAgIAAxkBAAIFTmgDroUtZKkTfVZkrGv7RmabTo1PAAI47TEbQ9whSL7xC01ompWPAQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:1e7570e43958faac0c9469ef0dd13a6c:19": {
+        "item": {
+            "id": 19,
+            "name": "Зона 3",
+            "description": "Maadi (Саррайят, Дегла, Улица 9), Shubra, El Basatin",
+            "category": 1,
+            "seller": 1,
+            "purchase_price": 150.0,
+            "price": 150.0,
+            "image": "AgACAgIAAxkBAAIFTmgDroUtZKkTfVZkrGv7RmabTo1PAAI47TEbQ9whSL7xC01ompWPAQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:674b45e5484406c9990764c84f7e133e:3": {
+        "item": {
+            "id": 3,
+            "name": "Копчёный сыр \"Косичка\" с семенами черного тмина",
+            "description": "Сплетенный косичкой копченый сыр с семенами черного тмина, кг.",
+            "category": 6,
+            "seller": 2,
+            "purchase_price": 400.0,
+            "price": 400.0,
+            "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ "
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:f2df22d1fd0d28d7a030cf3216ce49de:2": {
+        "item": {
+            "id": 2,
+            "name": "Рыба копченая",
+            "description": "Скумбрия холодного копчения высший сорт",
+            "category": 6,
+            "seller": 2,
+            "purchase_price": 480.0,
+            "price": 480.0,
+            "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ "
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:dc1d4e4d94fb4b3fdd2a948bd5118256:20": {
+        "item": {
+            "id": 20,
+            "name": "Зона 4",
+            "description": "Faisal (Фейсал)",
+            "category": 1,
+            "seller": 1,
+            "purchase_price": 200.0,
+            "price": 200.0,
+            "image": "AgACAgIAAxkBAAIFTmgDroUtZKkTfVZkrGv7RmabTo1PAAI47TEbQ9whSL7xC01ompWPAQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:386e4f173931a62818c87fd7545c0f84:17": {
+        "item": {
+            "id": 17,
+            "name": "Зона 1",
+            "description": "Nasr City (Арба уа Нус, Макарам, Мадарис)",
+            "category": 1,
+            "seller": 1,
+            "purchase_price": 100.0,
+            "price": 80.0,
+            "image": "AgACAgIAAxkBAAIFTmgDroUtZKkTfVZkrGv7RmabTo1PAAI47TEbQ9whSL7xC01ompWPAQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:1e7570e43958faac0c9469ef0dd13a6c:23": {
+        "item": {
+            "id": 23,
+            "name": "Зона 3",
+            "description": "Maadi (Саррайят, Дегла, Улица 9), Shubra, El Basatin",
+            "category": 1,
+            "seller": 1,
+            "purchase_price": 150.0,
+            "price": 150.0,
+            "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ "
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:dc1d4e4d94fb4b3fdd2a948bd5118256:24": {
+        "item": {
+            "id": 24,
+            "name": "Зона 4",
+            "description": "Faisal (Фейсал)",
+            "category": 1,
+            "seller": 1,
+            "purchase_price": 200.0,
+            "price": 200.0,
+            "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ "
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:bbd9967b3a3e31e22e0ec9e45de06b8b:22": {
+        "item": {
+            "id": 22,
+            "name": "Зона 2",
+            "description": "Downtown (Васт эль-Балад, Тахрир, Талат Харб), Garden City, Zamalek, Dokki (Докки, Бахтат), Mohandessin (Мухандисин, Шараа Гамаа), Heliopolis (Рокси, Сарбат, Кубри эль-Кубба), El Nozha, Sheraton Heliopolis (Шератон), El Marg (Марг), New Cairo (Тагамоа, AUC, Парк Молл)",
+            "category": 1,
+            "seller": 1,
+            "purchase_price": 100.0,
+            "price": 100.0,
+            "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ "
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:386e4f173931a62818c87fd7545c0f84:21": {
+        "item": {
+            "id": 21,
+            "name": "Зона 1",
+            "description": "Nasr City (Арба уа Нус, Макарам, Мадарис)",
+            "category": 1,
+            "seller": 1,
+            "purchase_price": 100.0,
+            "price": 80.0,
+            "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ "
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:1e64ebd081f3d77ba4c648a347e4c984:25": {
+        "item": {
+            "id": 25,
+            "name": "товарчег",
+            "description": "описание товарчега",
+            "category": 6,
+            "seller": 1,
+            "purchase_price": 20.0,
+            "price": 20.0,
+            "image": "AgACAgIAAxkBAAIFfWgt1hl8Qk9YblKwp7qcgtxy5xbVAAI07zEbb7XQSNgKFr-Z_nN8AQADAgADeQADNgQ"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:1c74f2d316fd3dcb15768c1f479e0cf0:28": {
+        "item": {
+            "id": 28,
+            "name": "Скумбрия холодного копчения высший сорт, кг",
+            "description": "Изысканный деликатес с насыщенным вкусом и нежной текстурой. Тонкий аромат натурального копчения на буковых опилках. Идеально для бутербродов, салатов и фуршетных нарезок.",
+            "category": 6,
+            "seller": 2,
+            "purchase_price": 480.0,
+            "price": 480.0,
+            "image": "AgACAgIAAxkBAAIFrGgvXjhhsZdtek3z0L2JAAFui3fHcAACfuwxGzGaCEh0vqmQ3bX18gEAAwIAA3kAAzYE"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:0f7e924196f7c551763e68be40d67ce4:29": {
+        "item": {
+            "id": 29,
+            "name": "Смесь Мусафир",
+            "description": "Состав:женьшень,гриб трюфель,мака перуанская \nПрименение: потенция,простатит,слабая эрекция, повышает либидо, повышает чувствительность,бесплодие, частое мочеспускание, лечение преждевременное эякуляции",
+            "category": 6,
+            "seller": 2,
+            "purchase_price": 600.0,
+            "price": 600.0,
+            "image": "AgACAgQAAxkBAAIFuGgvXmUppvBkuOG9XSWdYdWExZfWAAIqyjEbqycRUfWNVi8BkcIAAQEAAwIAA3gAAzYE"
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:8371f29cea0e1222847a8c38c5e567c0:30": {
+        "item": {
+            "name": "Зона доставки 1",
+            "description": "ыаыва",
+            "category": 1,
+            "seller": 1,
+            "purchase_price": "80",
+            "price": "80",
+            "image": "AgACAgIAAxkBAAIF8Wgwge4AAVMtujcPLR7tHvhEuj7RIwACn_wxG4RMiUkfGblyIAABF6wBAAMCAAN4AAM2BA",
+            "id": 30
+        },
+        "chat_id": -1002130857709
+    },
+    "buy:6903b6b01540c58318d36dcef8abcea0:31": {
+        "item": {
+            "name": "Зона доставки 2",
+            "description": "вавпвпфвап",
+            "category": 1,
+            "seller": 1,
+            "purchase_price": "100",
+            "price": "100",
+            "image": "AgACAgIAAxkBAAIF8Wgwge4AAVMtujcPLR7tHvhEuj7RIwACn_wxG4RMiUkfGblyIAABF6wBAAMCAAN4AAM2BA",
+            "id": 31
+        },
+        "chat_id": -1002130857709
     }
 }

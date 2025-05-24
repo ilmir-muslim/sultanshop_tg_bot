@@ -1,6 +1,7 @@
 import logging
+from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InputMediaPhoto
-from aiogram import F, Router
+from aiogram import F, Bot, Router
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,12 +24,45 @@ from kbds.inline import (
     get_user_cart,
     get_user_catalog_btns,
     get_user_main_btns,
+    one_button_kb,
 )
 
+from utils.json_operations import save_sharing_data
 from utils.paginator import Paginator
 
 
 menu_progressing_router = Router()
+
+
+class SharedContexMenu:
+    def __init__(self, callback, session, bot):
+        self.session = session
+        self.bot = bot
+        self.callback = callback
+
+    async def return_to_cart(self, user_id):
+        cart = await orm_get_user_carts(self.session, user_id)
+        if not cart:
+            banner = await orm_get_banner(self.session, "cart")
+            media = InputMediaPhoto(
+                media=banner.image, caption=f"<strong>{banner.description}</strong>"
+            )
+            reply_markup = get_user_cart(
+                level=3,
+                page=None,
+                pagination_btns=None,
+                product_id=None,
+            )
+        else:
+            media, reply_markup = await carts(
+                session=self.session,
+                level=3,
+                menu_name="cart",
+                page=1,
+                user_id=user_id,
+                product_id=cart[0].product.id,
+            )
+        await self.callback.message.edit_media(media=media, reply_markup=reply_markup)
 
 
 async def main_menu(session, level, menu_name, user_id=None):
@@ -71,11 +105,11 @@ async def products(session, level, category, page, user_id=None):
 
     image = InputMediaPhoto(
         media=product.image,
-        caption=f"<strong>{product.name}</strong>\n\n"
-        f"{product.description}\n\n"
-        f"<strong>Стоимость: {round(product.price, 2)}</strong>\n\n"
-        f"<strong>Товар {paginator.page} из {paginator.pages}</strong>\n\n"
-        f"<strong>Категория: {product.category.name}</strong>\n\n"
+        caption=f"<strong>{product.name}</strong>\n"
+        f"{product.description}\n"
+        f"<strong>Стоимость: {round(product.price, 2)}</strong>\n"
+        f"<strong>Товар {paginator.page} из {paginator.pages}</strong>\n"
+        f"<strong>Категория: {product.category.name}</strong>\n"
         f"<strong>{"есть " if is_available else "нет "}в наличии</strong>\n",
         parse_mode="HTML",
     )
@@ -133,7 +167,13 @@ async def show_all_products(callback: CallbackQuery, session: AsyncSession):
             parse_mode="HTML",
             reply_markup=reply_markup,
         )
-
+    await callback.message.answer(
+        'нажмите кнопку "На главную", чтобы вернуться на главную страницу',
+        reply_markup=one_button_kb(
+            text="На главную 🏠",
+            callback_data="main_menu",
+        ),
+    )
     await callback.answer("Показаны все товары в категории.")
 
 
@@ -193,7 +233,7 @@ async def carts(session, level, menu_name, page, user_id, product_id):
         caption = (
             f"<strong>{cart.product.name}</strong>\n"
             f"{cart.product.price}£ x {cart.quantity} = {cart_price}£\n"
-            f"Товар {paginator.page} из {paginator.pages} в корзине.\n\n"
+            f"Товар {paginator.page} из {paginator.pages} в корзине.\n"
             f"📦 <u>Содержимое корзины:</u>\n"
             f"<pre>{cart_summary_text}</pre>\n"
             f"💰 <strong>Общая стоимость:</strong> {total_price}£"
@@ -205,7 +245,7 @@ async def carts(session, level, menu_name, page, user_id, product_id):
             caption = (
                 f"<strong>{cart.product.name}</strong>\n"
                 f"{cart.product.price}£ x {cart.quantity} = {cart_price}£\n"
-                f"Товар {paginator.page} из {paginator.pages} в корзине.\n\n"
+                f"Товар {paginator.page} из {paginator.pages} в корзине.\n"
                 f"📦 <u>Содержимое корзины:</u>\n"
                 f"<pre>{cart_summary_text}</pre>\n"
                 f"💰 <strong>Общая стоимость:</strong> {total_price}£"
@@ -255,11 +295,6 @@ async def shipping(session: AsyncSession, level: int, menu_name: str, user_id: i
     banner = await orm_get_banner(session, menu_name)
 
     caption = banner.description
-
-    # Ограничиваем длину текста, если он слишком длинный
-    if len(caption) > 1024:
-        caption = caption[:1020] + "...\n(Слишком много данных для отображения)"
-
     # Формируем изображение и кнопки
     image = InputMediaPhoto(media=banner.image, caption=caption, parse_mode="HTML")
     quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
@@ -276,11 +311,27 @@ async def shipping(session: AsyncSession, level: int, menu_name: str, user_id: i
 
 
 @menu_progressing_router.callback_query(F.data.startswith("delivery_zone_"))
-async def add_delivery_to_cart(callback: CallbackQuery, session: AsyncSession):
+async def add_delivery_to_cart(
+    callback: CallbackQuery, session: AsyncSession, bot: Bot
+):
     delivery_zone_id = int(callback.data.split("_")[-1])
     user_id = callback.from_user.id
     await orm_add_to_cart(session, user_id, delivery_zone_id)
-    await callback.answer("Зона доставки добавлена в корзину.")
+    await callback.answer("Доставка добавлена в корзину.")
+    context = SharedContexMenu(callback, session, bot)
+    await context.return_to_cart(user_id)
+
+
+@menu_progressing_router.callback_query(F.data == "self_pickup")
+async def add_self_pickup_to_adress(
+    callback: CallbackQuery, session: AsyncSession, bot: Bot
+):
+    user_id = callback.from_user.id
+    update_order_data = {str(user_id): {"delivery_address": "Самовывоз"}}
+    save_sharing_data(update_order_data)
+    await callback.answer("Выбран самовывоз.")
+    context = SharedContexMenu(callback, session, bot)
+    await context.return_to_cart(user_id)
 
 
 @menu_progressing_router.callback_query(F.data == "main_menu")
@@ -294,7 +345,6 @@ async def back_to_main_menu(callback: CallbackQuery, session: AsyncSession):
     )
     await callback.message.edit_media(media=image, reply_markup=kbds)
     await callback.answer()  # Закрываем уведомление
-
 
 
 async def get_menu_content(

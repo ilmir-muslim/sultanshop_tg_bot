@@ -1,4 +1,3 @@
-from venv import logger
 from aiogram import F, Bot, Router, types
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +15,7 @@ from database.orm_query import (
     orm_update_review,
 )
 from filters.chat_types import ChatTypeFilter
-from kbds.inline import get_raiting_keyboard, one_button_kb
+from kbds.inline import one_button_kb
 from kbds.reply import get_keyboard
 
 
@@ -26,6 +25,7 @@ deliverer_private_router.message.filter(ChatTypeFilter(["private"]))
 
 class DelivererRatingState(StatesGroup):
     waiting_for_phone = State()
+
 
 class SharedContextDeliverer:
     def __init__(self, session: AsyncSession):
@@ -45,8 +45,30 @@ class SharedContextDeliverer:
             "список активных заказов",
             "принимаю заказы" if not is_active else "не принимаю заказы",
         )
+    async def send_active_orders(self, message: types.Message):
+        """
+        Отправляет список активных заказов в личные сообщения доставщику.
+        """
+        orders = await orm_get_orders(self.session, status="Оформлен")
+        if not orders:
+            await message.answer("Нет активных заказов.")
+            return
 
-
+        for order in orders:
+            if not order.delivery_address == "самовывоз":
+                await message.answer(
+                    f"📦 Заказ №{order.id}\n"
+                    f"👤 Покупатель: {order.user.first_name} {order.user.last_name}\n"
+                    f"📞 Телефон: {order.user.phone or 'Телефон не указан'}\n"
+                    f"📍 Адрес доставки: {order.delivery_address}\n"
+                    f"💰 Общая стоимость: {order.total_price} £.\n"
+                    f"📋 Статус: {order.status}\n"
+                    f"🕒 Дата создания: {order.created.strftime('%d.%m.%Y %H:%M')}\n",
+                    reply_markup=one_button_kb(
+                        text=f"принять заказ",
+                        callback_data=f"accept_order_{order.id}",
+                    ),
+                )
 
 @deliverer_private_router.message(Command("deliverer"))
 async def delivery_command(
@@ -63,7 +85,7 @@ async def delivery_command(
         # Переводим пользователя в состояние ожидания номера телефона
         await state.set_state(DelivererRatingState.waiting_for_phone)
     else:
-        shared_context = context(session)
+        shared_context = SharedContextDeliverer(session)
         deliverer_kb = await shared_context.get_deliverer_kb(user_id)
         await message.answer(
             "Вы в меню для доставщиков. Выберите действие", reply_markup=deliverer_kb
@@ -95,9 +117,8 @@ async def handle_phone_number(
 
     # Завершаем состояние
     await state.clear()
-
+    shared_context = SharedContextDeliverer(session)
     # Отправляем сообщение о завершении регистрации
-    shared_context = context(session)
     deliverer_kb = await shared_context.get_deliverer_kb(user_id)
     await message.answer(
         "Вы успешно зарегистрированы как доставщик", reply_markup=deliverer_kb
@@ -109,23 +130,9 @@ async def active_orders(message: types.Message, session: AsyncSession):
     """
     Обработчик кнопки "список активных заказов"
     """
-    orders = await orm_get_orders(session, status="Оформлен")
-
-    for order in orders:
-        if not order.delivery_address == "самовывоз":
-            await message.answer(
-                f"📦 Заказ №{order.id}\n"
-                f"👤 Покупатель: {order.user.first_name} {order.user.last_name}\n"
-                f"📞 Телефон: {order.user.phone or 'Телефон не указан'}\n"
-                f"📍 Адрес доставки: {order.delivery_address}\n"
-                f"💰 Общая стоимость: {order.total_price} £.\n"
-                f"📋 Статус: {order.status}\n"
-                f"🕒 Дата создания: {order.created.strftime('%d.%m.%Y %H:%M')}\n",
-                reply_markup=one_button_kb(
-                    text=f"принять заказ",
-                    callback_data=f"accept_order_{order.id}",
-                ),
-            )
+    context = SharedContextDeliverer(session)
+    await context.send_active_orders(message)
+    
 
 
 @deliverer_private_router.message(F.text.in_(["принимаю заказы", "не принимаю заказы"]))
@@ -138,7 +145,7 @@ async def deliverer_status(message: types.Message, session: AsyncSession):
         data = {"is_active": True}
         await orm_update_deliverer(session, telegram_id=user_id, data=data)
         # Теперь получаем актуальную клавиатуру
-        shared_context = context(session)
+        shared_context = SharedContextDeliverer(session)
         deliverer_kb = await shared_context.get_deliverer_kb(user_id)
         await message.answer(
             "Вы принимаете заказы, новые заказы будут приходить в этот чат",
@@ -147,24 +154,33 @@ async def deliverer_status(message: types.Message, session: AsyncSession):
     elif message.text == "не принимаю заказы":
         data = {"is_active": False}
         await orm_update_deliverer(session, telegram_id=user_id, data=data)
-        shared_context = context(session)
+        shared_context = SharedContextDeliverer(session)
         deliverer_kb = await shared_context.get_deliverer_kb(user_id)
         await message.answer(
             "Вы не принимаете заказы, заказы не будут приходить",
             reply_markup=deliverer_kb,
         )
 
+
 @deliverer_private_router.callback_query(F.data.startswith("accept_order_"))
-async def accept_order(callback: types.CallbackQuery, session: AsyncSession):
+async def accept_order(callback: types.CallbackQuery, session: AsyncSession, bot: Bot):
     """
     Обработчик кнопки "принять заказ"
     """
     deliverer = await orm_get_deliverers(session, telegram_id=callback.from_user.id)
     order_id = int(callback.data.split("_")[-1])
+    order = await orm_get_orders(session, order_id=order_id)
     data_for_update = {
-        "deliverer_id": callback.deliverer.id,
+        "deliverer_id": deliverer.id,
         "status": "В работе",
     }
+    await bot.send_message(
+        order.user_id,
+        f"Ваш заказ №{order_id} был принят курьером {deliverer.first_name}\n"
+        f"номер телефона: {deliverer.phone}\n"
+        f"написать курьеру: @{deliverer.telegram_name}\n"
+        f"Ожидайте доставку.",
+    )
     await orm_update_order(session, order_id, data_for_update)
     await callback.message.answer(
         f'Вы приняли заказ №{order_id}, нажмите кнопку "я выполнил заказ", когда совершите доставку',
@@ -188,18 +204,20 @@ async def complete_order(
     data_for_update = {
         "status": "Выполнен",
     }
-    await bot.send_message(
-        order.user_id,
-        f"Ваш заказ №{order_id} был выполнен! \n"
-        f"Поставьте оценку доставщику и оставьте отзыв",
-        reply_markup=get_raiting_keyboard(
-            target_type="deliverer",
-            target_id=order.deliverer,  # ID доставщика
-            order_id=order_id,  # ID заказа
-        ),
-    )
+    # await bot.send_message(
+    #     order.user_id,
+    #     f"Ваш заказ №{order_id} был выполнен! \n"
+    #     f"Поставьте оценку доставщику и оставьте отзыв",
+    #     reply_markup=get_raiting_keyboard(
+    #         target_type="deliverer",
+    #         target_id=order.deliverer,  # ID доставщика
+    #         order_id=order_id,  # ID заказа
+    #     ),
+    # )
     await orm_update_order(session, order_id, data_for_update)
     await callback.answer(f"Вы завершили заказ №{order_id}")
+    context = SharedContextDeliverer(session)
+    await context.send_active_orders(callback.message)
 
 
 @deliverer_private_router.callback_query(F.data.startswith("deliverer_"))

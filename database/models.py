@@ -45,8 +45,8 @@ class Product(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
     description: Mapped[str] = mapped_column(Text)
-    purchase_price: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)
-    price: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)
+    purchase_price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     image: Mapped[str] = mapped_column(String(150))
     category_id: Mapped[int] = mapped_column(
         ForeignKey("category.id", ondelete="CASCADE"), nullable=False
@@ -114,14 +114,14 @@ class WaitList(Base):
 
 
 class Orders(Base):
-    __tablename__ = "Orders"
+    __tablename__ = "orders"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
     )
     delivery_address: Mapped[str] = mapped_column(Text, nullable=False)
-    total_price: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)
+    total_price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     status: Mapped[str] = mapped_column(String(150))
     deliverer_id: Mapped[int] = mapped_column(  # Переименовано
         ForeignKey("deliverer.id", ondelete="SET NULL"), nullable=True
@@ -141,7 +141,7 @@ class OrderItem(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     order_id: Mapped[int] = mapped_column(
-        ForeignKey("Orders.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("orders.id", ondelete="CASCADE"), nullable=False
     )
     product_id: Mapped[int] = mapped_column(
         ForeignKey("product.id", ondelete="CASCADE"), nullable=False
@@ -176,7 +176,7 @@ class DelivererReview(Base):
         ForeignKey("deliverer.id", ondelete="CASCADE"), nullable=False
     )
     rating: Mapped[int] = mapped_column(Integer, nullable=False)
-    rating_summary: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)
+    rating_summary: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=True)
 
     user: Mapped["Users"] = relationship(backref="deliverer_reviews")

@@ -73,7 +73,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id')
     )
-    op.create_table('Orders',
+    op.create_table('orders',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('user_id', sa.BigInteger(), nullable=False),
     sa.Column('delivery_address', sa.Text(), nullable=False),
@@ -142,7 +142,7 @@ def upgrade() -> None:
     sa.Column('quantity', sa.Integer(), nullable=False),
     sa.Column('created', sa.DateTime(), nullable=False),
     sa.Column('updated', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['order_id'], ['Orders.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['product_id'], ['product.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -168,7 +168,7 @@ def downgrade() -> None:
     op.drop_table('product')
     op.drop_table('feedback_book')
     op.drop_table('deliverer_reviews')
-    op.drop_table('Orders')
+    op.drop_table('orders')
     op.drop_table('users')
     op.drop_table('sellers')
     op.drop_table('deliverer')

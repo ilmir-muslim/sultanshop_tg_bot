@@ -9,9 +9,6 @@ from utils.json_utils import decimal_default, prepare_for_json
 from config import ADMIN_FILE, DELIVERERS_FILE
 
 
-
-
-
 def save_admins(admins_list):
     with open(ADMIN_FILE, "w", encoding="utf-8") as file:
         json.dump(admins_list, file, ensure_ascii=False, indent=4)
@@ -132,7 +129,7 @@ async def get_and_remove_random_item(session: AsyncSession):
 CALLBACK_FILE = "button_callbacks.json"
 
 
-def generate_callback_data(item, chat_id):
+def generate_callback_data(item, chat_id) -> str:
     """
     Генерирует уникальный хэш для товара с учетом группы и изображения.
     """
@@ -156,3 +153,54 @@ def save_callback_data(callback_data, item, chat_id):
 
     with open(CALLBACK_FILE, "w", encoding="utf-8") as file:
         json.dump(callbacks, file, ensure_ascii=False, indent=4)
+
+SHARING_DATA_FILE = "sharing_data.json"
+
+def save_sharing_data(sharing_data):
+    """
+    Добавляет данные в файл sharing_data.json для использования в других частях кода.
+    """
+    try:
+        with open(SHARING_DATA_FILE, "r", encoding="utf-8") as file:
+            existing_data = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        existing_data = {}
+
+    # Обновляем существующие данные новыми
+    existing_data.update(sharing_data)
+
+    # Сохраняем обновлённый словарь в файл
+    with open(SHARING_DATA_FILE, "w", encoding="utf-8") as file:
+        json.dump(existing_data, file, ensure_ascii=False, indent=4)
+    logging.info("Данные для шеринга сохранены в файл sharing_data.json")
+
+
+def load_sharing_data(user_id) -> dict:
+    """
+    Возвращает значение dict_key для конкретного user_id из sharing_data.json.
+    """
+    with open(SHARING_DATA_FILE, "r", encoding="utf-8") as file:
+        data = json.load(file)
+    user_data = data.get(str(user_id), {})
+    return user_data
+
+def delete_sharing_data(user_id):
+    """
+    Удаляет данные для конкретного user_id из sharing_data.json.
+    """
+    try:
+        with open(SHARING_DATA_FILE, "r", encoding="utf-8") as file:
+            data = json.load(file)
+        if str(user_id) in data:
+            del data[str(user_id)]
+            with open(SHARING_DATA_FILE, "w", encoding="utf-8") as file:
+                json.dump(data, file, ensure_ascii=False, indent=4)
+            logging.info(f"Данные для user_id {user_id} удалены из sharing_data.json")
+        else:
+            logging.warning(f"Нет данных для user_id {user_id} в sharing_data.json")
+    except FileNotFoundError:
+        logging.error("Файл sharing_data.json не найден")
+    except json.JSONDecodeError:
+        logging.error("Ошибка чтения JSON: файл может быть повреждён")
+    except Exception as e:
+        logging.error(f"Неожиданная ошибка: {e}")

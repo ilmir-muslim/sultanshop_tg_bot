@@ -282,7 +282,7 @@ async def orm_add_user(
     last_name: str | None = None,
     phone: str | None = None,
 ):
-    query = select(Usera).where(Users.user_id == user_id)
+    query = select(Users).where(Users.user_id == user_id)
     result = await session.execute(query)
     if result.first() is None:
         session.add(
@@ -471,18 +471,21 @@ async def orm_create_order(
     return full_order
 
 
-async def orm_get_orders(session: AsyncSession, status: str = None):
-    query = (
-        select(Orders)
-        .where(Orders.status == status)
-        .options(
-            selectinload(Orders.user),  # Предзагрузка данных пользователя
-            selectinload(Orders.items).selectinload(
-                OrderItem.product
-            ),  # Предзагрузка товаров
-        )
+
+async def orm_get_orders(session: AsyncSession, status: str = None, order_id: int = None):
+    query = select(Orders).options(
+        selectinload(Orders.user),
+        selectinload(Orders.items).selectinload(OrderItem.product),
+        selectinload(Orders.deliverer),
     )
+    if order_id is not None:
+        query = query.where(Orders.id == order_id)
+    elif status is not None:
+        query = query.where(Orders.status == status)
+
     result = await session.execute(query)
+    if order_id is not None:
+        return result.scalar_one_or_none()
     return result.scalars().all()
 
 
@@ -675,7 +678,7 @@ async def orm_update_review(session: AsyncSession, data: dict):
     # Проверяем, существует ли отзыв
     query = select(DelivererReview).where(
         DelivererReview.user_id == data["user_id"],
-        DelivererReview.target_id == data["target_id"],
+        DelivererReview.deliverer_id == data["deliverer_id"],  # исправлено
         DelivererReview.order_id == data["order_id"],
     )
     result = await session.execute(query)

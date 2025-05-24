@@ -112,12 +112,12 @@ async def send_random_item_periodically(session_maker: async_sessionmaker, bot: 
                     groups = json.load(file)
             except (FileNotFoundError, json.JSONDecodeError) as e:
                 logging.error(f"Ошибка загрузки groups.json: {e}")
-                await asyncio.sleep(60)
+                await asyncio.sleep(3600)
                 continue
 
             if not groups:
                 logging.warning("Нет групп для отправки")
-                await asyncio.sleep(60)
+                await asyncio.sleep(3600)
                 continue
 
             # Отправляем сообщения
@@ -167,8 +167,8 @@ async def send_random_item_periodically(session_maker: async_sessionmaker, bot: 
                         logging.error(f"Ошибка отправки в {chat_id}: {e}")
 
             # Пауза между проверками (60 секунд)
-            await asyncio.sleep(60)
+            await asyncio.sleep(3600)
 
         except Exception as e:
             logging.error(f"Критическая ошибка: {e}")
-            await asyncio.sleep(60)
+            await asyncio.sleep(3600)

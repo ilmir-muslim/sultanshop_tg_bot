@@ -34,7 +34,7 @@ def get_user_main_btns(*, level: int, sizes: tuple[int] = (2,), quantity: int = 
         "Корзина 🛒" if quantity == 0 else f"Корзина 🛒 {quantity}": ("cart", 3),
         "О нас ℹ️": ("about", level),
         "Мои заказы 📦": ("orders", 4),
-        "Доставка 🛵": ("shipping", 5),
+        "Доставка/Курьер 🛵": ("shipping", 5),
     }
 
     for text, (menu_name, target_level) in btns.items():

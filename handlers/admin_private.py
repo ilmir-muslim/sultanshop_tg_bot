@@ -28,7 +28,6 @@ from filters.callback_filters import StatusCallback
 from filters.chat_types import ChatTypeFilter, IsAdmin
 
 
-
 from fixtures.fixtures_utils import dump_fixtures, load_fixtures
 from kbds.inline import get_callback_btns, get_status_keyboard
 from kbds.reply import get_keyboard
@@ -282,9 +281,6 @@ async def add_product(message: types.Message, state: FSMContext):
         "Введите название товара", reply_markup=types.ReplyKeyboardRemove()
     )
     await state.set_state(AddProduct.name)
-
-
-# TODO добавить выбор продавца при добалении товара
 
 
 # Хендлер отмены и сброса состояния должен быть всегда именно здесь,
@@ -691,6 +687,7 @@ async def handle_status_callback(
 
 ######## Работа с фикстурами ##########
 
+
 @admin_router.message(Command("dumpfix"))
 async def dump_fixtures_handler(message: types.Message, session: AsyncSession):
     """
@@ -698,6 +695,7 @@ async def dump_fixtures_handler(message: types.Message, session: AsyncSession):
     """
     await dump_fixtures(session)
     await message.answer("Фикстуры успешно созданы.")
+
 
 @admin_router.message(Command("loadfix"))
 async def load_fixtures_handler(message: types.Message, session: AsyncSession):

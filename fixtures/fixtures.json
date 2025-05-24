@@ -1,220 +1,193 @@
 {
-  "order_item": [],
-  "deliverer_reviews": [],
-  "cart": [],
-  "feedback_book": [],
-  "sellers": [
-    {
-      "id": 1,
-      "name": "султаншоп",
-      "description": "мы",
-      "phone": "+79991234567",
-      "address": "каир",
-      "created": "2025-04-13T03:32:34.476656",
-      "updated": "2025-04-13T03:32:34.476656"
-    },
-    {
-      "id": 2,
-      "name": "musafir",
-      "description": null,
-      "phone": null,
-      "address": null,
-      "created": "2025-05-07T15:28:10.580851",
-      "updated": "2025-05-07T15:28:10.580851"
-    },
-    {
-      "id": 3,
-      "name": "Магазин A",
-      "description": "Лучшие товары для вас",
-      "phone": "+1234567890",
-      "address": "ул. Примерная, д. 1",
-      "created": "2025-05-19T18:21:40.223940",
-      "updated": "2025-05-19T18:21:40.223940"
-    },
-    {
-      "id": 4,
-      "name": "Магазин B",
-      "description": "Доставка на дом",
-      "phone": "+9876543210",
-      "address": "ул. Примерная, д. 2",
-      "created": "2025-05-19T18:21:40.223940",
-      "updated": "2025-05-19T18:21:40.223940"
-    }
-  ],
-  "category": [
-    {
-      "id": 4,
-      "name": "оргтехника",
-      "created": "2025-04-13T03:31:46.867319",
-      "updated": "2025-04-13T03:31:46.867319"
-    },
-    {
-      "id": 5,
-      "name": "продукты",
-      "created": "2025-04-16T15:25:11.157041",
-      "updated": "2025-04-16T15:25:11.157041"
-    },
-    {
-      "id": 6,
-      "name": "Доставка/Курьер",
-      "created": "2025-05-11T06:35:51.598557",
-      "updated": "2025-05-11T06:35:51.598557"
-    },
-    {
-      "id": 9,
-      "name": "Электроника",
-      "created": "2025-05-19T18:21:36.375977",
-      "updated": "2025-05-19T18:21:36.375977"
-    },
-    {
-      "id": 10,
-      "name": "Одежда",
-      "created": "2025-05-19T18:21:36.375977",
-      "updated": "2025-05-19T18:21:36.375977"
-    },
-    {
-      "id": 11,
-      "name": "Продукты питания",
-      "created": "2025-05-19T18:21:36.375977",
-      "updated": "2025-05-19T18:21:36.375977"
-    }
-  ],
-  "wait_list": [],
-  "Orders": [],
   "banner": [
     {
       "id": 1,
       "name": "main",
-      "image": "AgACAgIAAxkBAAIB42f_ec2Bo1dpcEc0O6ffKIVYH3zmAALS-jEbBf0BSPMMquBVY9pEAQADAgADeQADNgQ",
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ",
       "description": "Добро пожаловать!",
-      "created": "2025-04-13T03:27:53.097582",
-      "updated": "2025-04-16T09:35:24.654438"
-    },
-    {
-      "id": 5,
-      "name": "catalog",
-      "image": "AgACAgIAAxkBAAIB42f_ec2Bo1dpcEc0O6ffKIVYH3zmAALS-jEbBf0BSPMMquBVY9pEAQADAgADeQADNgQ",
-      "description": "Категории:",
-      "created": "2025-04-13T03:27:53.097582",
-      "updated": "2025-04-16T09:36:36.061138"
-    },
-    {
-      "id": 6,
-      "name": "cart",
-      "image": "AgACAgIAAxkBAAIB42f_ec2Bo1dpcEc0O6ffKIVYH3zmAALS-jEbBf0BSPMMquBVY9pEAQADAgADeQADNgQ",
-      "description": "В корзине ничего нет!",
-      "created": "2025-04-13T03:27:53.097582",
-      "updated": "2025-04-16T09:36:49.104723"
-    },
-    {
-      "id": 2,
-      "name": "about",
-      "image": "AgACAgIAAxkBAAIB42f_ec2Bo1dpcEc0O6ffKIVYH3zmAALS-jEbBf0BSPMMquBVY9pEAQADAgADeQADNgQ",
-      "description": "Магазин Султан. Товары и услуги\nКонтакты нашего магазина:\nТелефон: +201026282854\nТелеграм: @Vmisreabusultan, @Ilmir_muslim",
-      "created": "2025-04-13T03:27:53.097582",
-      "updated": "2025-04-16T09:35:40.551717"
+      "created": "2025-04-11T11:56:36.231284",
+      "updated": "2025-04-16T09:40:47.969605"
     },
     {
       "id": 4,
       "name": "shipping",
-      "image": "AgACAgIAAxkBAAIDhGgbdHZwUgABEWrLaYK7qRIqj_5wyQACp_IxG5Za4Uhdj5IoitBCEgEAAwIAA3gAAzYE",
-      "description": "<b>Для самовывоза:</b>  \n✅ дождитесь сообщения о том что ваш заказ готов к выдаче  \n✅ приходите к нам в магазин по адресу: <a href=\"https://maps.app.goo.gl/bEAY1Zy45zn28A4e9?g_st=it\">https://maps.app.goo.gl/bEAY1Zy45zn28A4e9?g_st=it</a>\n",
-      "created": "2025-04-13T03:27:53.097582",
-      "updated": "2025-05-07T14:55:50.542358"
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ",
+      "description": "<b>Варианты доставки</b>\n✅ Курьер\n✅ Самовывоз",
+      "created": "2025-04-11T11:56:36.231284",
+      "updated": "2025-04-16T09:41:46.103880"
+    },
+    {
+      "id": 5,
+      "name": "catalog",
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ",
+      "description": "Категории:",
+      "created": "2025-04-11T11:56:36.231284",
+      "updated": "2025-04-16T09:42:02.384974"
+    },
+    {
+      "id": 2,
+      "name": "about",
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ",
+      "description": "Магазин Султан. Товары и услуги\nКонтакты нашего магазина:\nТелефон: +201026282854\nТелеграм: @Vmisreabusultan, @Ilmir_muslim",
+      "created": "2025-04-11T11:56:36.231284",
+      "updated": "2025-04-16T09:41:02.961893"
+    },
+    {
+      "id": 6,
+      "name": "cart",
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ",
+      "description": "В корзине ничего нет!",
+      "created": "2025-04-11T11:56:36.231284",
+      "updated": "2025-04-16T18:32:38.997646"
     },
     {
       "id": 3,
       "name": "orders",
-      "image": "AgACAgIAAxkBAAIC9mgOSqg-bk-bQ4E8celCOiZ8-a5YAAKe9jEb7vFwSLOZjxQqbFmeAQADAgADeQADNgQ",
-      "description": "У вас нет активных заказов.",
-      "created": "2025-04-13T03:27:53.097582",
-      "updated": "2025-05-18T13:07:29.066231"
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ",
+      "description": "<strong>Ваши заказы:</strong>\n🆔 Заказ #2\n📍 Адрес доставки: самовывоз\n📦 Статус: Оформлен\n💰 Сумма: 960.00£\nТовары:\n- Рыба копченая x 2 (480.00£ за шт.)\n-----------------------------------",
+      "created": "2025-04-11T11:56:36.231284",
+      "updated": "2025-05-05T02:50:15.122633"
     }
   ],
-  "deliverer": [
+  "sellers": [
+        {
+      "id": 1,
+      "name": "Sultanshop",
+      "description": "Владельцы этой торговой площадки",
+      "phone": "+20 10 2628 2854",
+      "address": "Каир",
+      "created": "2025-04-16T20:01:49.685030",
+      "updated": "2025-04-16T20:01:49.685030"
+    },
     {
-      "id": 3,
-      "telegram_id": 6903748145,
-      "telegram_name": "Ilmir_muslim",
-      "first_name": "Ильмир",
-      "last_name": "Гильмияров",
-      "phone": "+201011255145",
-      "is_active": true,
-      "created": "2025-05-14T16:15:48.852950",
-      "updated": "2025-05-16T05:03:24.275572"
+      "id": 2,
+      "name": "Рустам продажа копченостей",
+      "description": "продажа копчёной продукции",
+      "phone": "+20 15 5411 7593",
+      "address": "Каир",
+      "created": "2025-04-16T20:01:49.685030",
+      "updated": "2025-04-16T20:01:49.685030"
     }
   ],
   "product": [
     {
-      "id": 14,
-      "name": "Смартфон",
-      "description": "Современный смартфон с хорошей камерой",
-      "purchase_price": 500.0,
-      "price": 600.0,
-      "image": "smartphone.jpg",
-      "category_id": 9,
-      "seller_id": 1,
-      "is_available": true,
-      "created": "2025-05-19T18:22:45.840053",
-      "updated": "2025-05-19T18:22:45.840053"
-    },
-    {
-      "id": 15,
-      "name": "Футболка",
-      "description": "Хлопковая футболка",
-      "purchase_price": 10.0,
-      "price": 15.0,
-      "image": "tshirt.jpg",
-      "category_id": 10,
+      "id": 2,
+      "name": "Рыба копченая",
+      "description": "Скумбрия холодного копчения высший сорт",
+      "purchase_price": 480.0,
+      "price": 480.0,
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ ",
+      "category_id": 6,
       "seller_id": 2,
       "is_available": true,
-      "created": "2025-05-19T18:22:45.840053",
-      "updated": "2025-05-19T18:22:45.840053"
+      "created": "2025-04-16T20:05:12.856339",
+      "updated": "2025-04-16T20:08:55.035495"
     },
     {
-      "id": 16,
-      "name": "Яблоки",
-      "description": "Свежие яблоки",
-      "purchase_price": 2.0,
-      "price": 3.0,
-      "image": "apples.jpg",
-      "category_id": 11,
+      "id": 3,
+      "name": "Копчёный сыр \"Косичка\" с семенами черного тмина",
+      "description": "Сплетенный косичкой копченый сыр с семенами черного тмина, кг.",
+      "purchase_price": 400.0,
+      "price": 400.0,
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ ",
+      "category_id": 6,
+      "seller_id": 2,
+      "is_available": true,
+      "created": "2025-04-19T14:09:09.455216",
+      "updated": "2025-04-19T14:26:34.920920"
+    },
+    {
+      "name": "Зона 1",
+      "description": "Nasr City (Арба уа Нус, Макарам, Мадарис)",
+      "purchase_price": 100.0,
+      "price": 80.00,
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ ",
+      "category_id": 1,
       "seller_id": 1,
       "is_available": true,
-      "created": "2025-05-19T18:22:45.840053",
-      "updated": "2025-05-19T18:22:45.840053"
+      "created": "2025-04-19T14:09:10.455216",
+      "updated": "2025-04-19T14:26:40.920920"
+    },
+    {
+      "name": "Зона 2",
+      "description": "Downtown (Васт эль-Балад, Тахрир, Талат Харб), Garden City, Zamalek, Dokki (Докки, Бахтат), Mohandessin (Мухандисин, Шараа Гамаа), Heliopolis (Рокси, Сарбат, Кубри эль-Кубба), El Nozha, Sheraton Heliopolis (Шератон), El Marg (Марг), New Cairo (Тагамоа, AUC, Парк Молл)",
+      "purchase_price": 100.0,
+      "price": 100.00,
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ ",
+      "category_id": 1,
+      "seller_id": 1,
+      "is_available": true,
+      "created": "2025-04-19T14:09:10.455216",
+      "updated": "2025-04-19T14:26:40.920920"
+
+    },
+    {
+      "name": "Зона 3",
+      "description": "Maadi (Саррайят, Дегла, Улица 9), Shubra, El Basatin",
+      "purchase_price": 150.0,
+      "price": 150.00,
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ ",
+      "category_id": 1,
+      "seller_id": 1,
+      "is_available": true,
+      "created": "2025-04-19T14:09:10.455216",
+      "updated": "2025-04-19T14:26:40.920920"
+
+    },
+    {
+      "name": "Зона 4",
+      "description": "Faisal (Фейсал)",
+      "purchase_price": 200.0,
+      "price": 200.00,
+      "image": "AgACAgIAAxkBAAIEtGf_ex_x7vVg9nLa7YyBgFf3rJwMAALS-jEbBf0BSO-cTCjVwWSvAQADAgADeQADNgQ ",
+      "category_id": 1,
+      "seller_id": 1,
+      "is_available": true,
+      "created": "2025-04-19T14:09:10.455216",
+      "updated": "2025-04-19T14:26:40.920920"
     }
   ],
+  "Orders": [],
+  "deliverer": [],
   "users": [
     {
       "id": 1,
+      "user_id": 374672539,
+      "first_name": "Татарин",
+      "last_name": null,
+      "phone": "+201234567890",
+      "address": "самовывоз",
+      "created": "2025-04-16T20:08:06.173335",
+      "updated": "2025-04-16T20:08:55.016698"
+    },
+    {
+      "id": 2,
       "user_id": 6903748145,
       "first_name": "Ильмир",
       "last_name": "Гильмияров",
       "phone": "+201234567890",
-      "address": "вввленинград спб . ру",
-      "created": "2025-04-23T01:33:34.212479",
-      "updated": "2025-05-15T10:37:13.279844"
-    },
-    {
-      "id": 2,
-      "user_id": 1001,
-      "first_name": "Иван",
-      "last_name": "Иванов",
-      "phone": "+79001112233",
-      "address": "Москва, ул. Ленина, д. 10",
-      "created": "2025-05-19T18:21:43.391936",
-      "updated": "2025-05-19T18:21:43.391936"
-    },
-    {
-      "id": 3,
-      "user_id": 1002,
-      "first_name": "Мария",
-      "last_name": "Петрова",
-      "phone": "+79004445566",
-      "address": "Санкт-Петербург, ул. Ленина, д. 20",
-      "created": "2025-05-19T18:21:43.391936",
-      "updated": "2025-05-19T18:21:43.391936"
+      "address": "самовывоз",
+      "created": "2025-04-26T15:02:36.677169",
+      "updated": "2025-05-05T02:41:33.776050"
     }
-  ]
+  ],
+  "order_item": [],
+  "deliverer_reviews": [],
+  "cart": [],
+  "feedback_book": [],
+  "category": [
+    {
+      "id": 1,
+      "name": "Доставка/Курьер",
+      "created": "2025-04-16T19:52:41.063823",
+      "updated": "2025-04-16T19:52:41.063823"
+    },
+    {
+      "id": 6,
+      "name": "Продукты",
+      "created": "2025-04-16T19:52:40.063823",
+      "updated": "2025-04-16T19:52:40.063823"
+    }
+  ],
+  "wait_list": []
 }

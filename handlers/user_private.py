@@ -4,7 +4,6 @@ from aiogram import F, Bot, types, Router
 from aiogram.filters import CommandObject, CommandStart
 
 
-
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,17 +14,19 @@ from database.orm_query import (
     orm_create_order,
     orm_get_deliverers,
     orm_get_user,
+    orm_get_user_carts,
     orm_update_user,
 )
 
 from filters.chat_types import ChatTypeFilter
-from handlers.menu_processing import get_menu_content, main_menu
+from handlers.menu_processing import get_menu_content, main_menu, shipping
 from kbds.inline import (
     MenuCallBack,
     one_button_kb,
     phone_confirm_kb,
     address_confirm_kb,
 )
+from utils.json_operations import delete_sharing_data, load_sharing_data
 
 
 class OrderState(StatesGroup):
@@ -36,9 +37,9 @@ class OrderState(StatesGroup):
 class SharedContextUser:
     def __init__(self, session, bot):
         self.session = session
-        self.bot = bot  # Инициализируем bot позже
+        self.bot = bot 
 
-    async def order_details_text(self, order: int) -> dict:
+    async def order_details_text(self, order) -> dict:
         """формирует текст для сообщения с деталями заказа."""
 
         order_details = (
@@ -74,7 +75,7 @@ class SharedContextUser:
             "order_details_for_buyer": order_details_for_buyer,
         }
 
-    async def send_message_to_deliverers(self, order_id: int) -> types.Message:
+    async def send_message_to_deliverers(self, order) -> types.Message:
         """Отправляет сообщение с деталями заказа доставщику."""
         deliverers = await orm_get_deliverers(session=self.session)
 
@@ -85,7 +86,7 @@ class SharedContextUser:
         ]
         logger.debug(f"my_deliverer_list {my_deliverer_list}")
 
-        order_details_dict = await self.order_details_text(order_id)
+        order_details_dict = await self.order_details_text(order=order)
         order_text = order_details_dict["order_details"]
 
         for deliverer in my_deliverer_list:
@@ -95,19 +96,19 @@ class SharedContextUser:
                     order_text,
                     reply_markup=one_button_kb(
                         text="Принять заказ",
-                        callback_data=f"accept_order_{order_id.id}",
+                        callback_data=f"accept_order_{order.id}",
                     ),
                 )
             except Exception as e:
                 logger.exception(f"Ошибка при отправке доставщику {deliverer}")
 
-    async def send_message_to_admins(self, order_id: int) -> types.Message:
+    async def send_message_to_admins(self, order) -> types.Message:
         """Отправляет сообщение с деталями заказа администратору."""
 
         admin_list = self.bot.my_admins_list
         logger.debug(f"admin_list raw: {admin_list}")
 
-        order_details_dict = await self.order_details_text(order_id)
+        order_details_dict = await self.order_details_text(order=order)
         order_text = order_details_dict["order_details"]
 
         for admin in admin_list:
@@ -117,11 +118,49 @@ class SharedContextUser:
                     order_text,
                     reply_markup=one_button_kb(
                         text="В работе",
-                        callback_data=f"accept_order_{order_id.id}",
+                        callback_data=f"accept_order_{order.id}",
                     ),
                 )
             except Exception as e:
                 logger.exception(f"Ошибка при отправке администратору {admin}")
+
+    async def finish_order(self, user, state, delivery_address: str):
+        data = await state.get_data()
+        phone_number = data.get("phone_number")
+        user_id = user.id
+
+        await state.update_data(delivery_address=delivery_address)
+
+        await orm_update_user(
+            self.session,
+            user_id=user_id,
+            data={
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "phone": phone_number,
+                "address": delivery_address,
+            },
+        )
+
+        new_order = await orm_create_order(
+            self.session, user_id, delivery_address, phone_number
+        )
+        logger.debug(f"Новый заказ: {new_order}")
+        order_details_dict = await self.order_details_text(order=new_order)
+        order_details_for_buyer = order_details_dict["order_details_for_buyer"]
+
+        await self.send_message_to_deliverers(new_order)
+        await self.send_message_to_admins(new_order)
+        await self.bot.send_message(user_id, order_details_for_buyer)
+        await self.bot.send_message(user_id, "Спасибо за ваш заказ!")
+        media, reply_markup = await main_menu(
+            self.session, level=0, menu_name="main", user_id=user_id
+        )
+        await self.bot.send_photo(
+            user_id, photo=media.media, caption=media.caption, reply_markup=reply_markup
+        )
+        await state.clear()
+    
 
 
 user_private_router = Router()
@@ -214,6 +253,7 @@ async def user_menu(
 ):
     if callback_data.menu_name == "add_to_cart":
         await add_to_cart(callback, callback_data, session)
+        
         return
 
     if callback_data.menu_name == "add_to_waitlist":
@@ -237,9 +277,34 @@ async def user_menu(
 # 1. Начало оформления заказа
 @user_private_router.callback_query(F.data == "make_order")
 async def make_order(
-    callback: types.CallbackQuery, state: FSMContext, session: AsyncSession
+    callback: types.CallbackQuery, state: FSMContext, session: AsyncSession, bot: Bot
 ):
     user_id = callback.from_user.id
+    cart = await orm_get_user_carts(session, user_id=user_id)
+    has_delivery_zone = any(
+        item.product.name.startswith("Зона доставки") for item in cart
+    )
+    try:
+        has_delivery_address = load_sharing_data(user_id).get("delivery_address")
+    except FileNotFoundError:
+        has_delivery_address = False
+    except Exception as e:
+        logging.error(f"Ошибка при загрузке данных: {e}")
+        has_delivery_address = False
+
+    if not has_delivery_zone and not has_delivery_address:
+        media, reply_markup = await shipping(
+            session=session, level=5, menu_name="shipping", user_id=user_id
+        )
+        await callback.answer("Выберите способ получения товара")
+        await bot.send_photo(
+            user_id,
+            photo=media.media,
+            caption=media.caption,
+            reply_markup=reply_markup,
+        )
+        return
+
     user = await orm_get_user(
         session, user_id
     )  # Проверяем, есть ли пользователь в базе
@@ -280,22 +345,37 @@ async def user_orders(callback: types.CallbackQuery, session: AsyncSession):
 # 2. Подтверждение номера телефона или ввод нового
 @user_private_router.callback_query(F.data == "confirm_phone")
 async def confirm_phone(
-    callback: types.CallbackQuery, state: FSMContext, session: AsyncSession
+    callback: types.CallbackQuery, state: FSMContext, session: AsyncSession, bot: Bot
 ):
     user = await orm_get_user(session, callback.from_user.id)
     await state.update_data(phone_number=user.phone)  # Записываем телефон в стейт
-
-    if user.address:
-        await callback.message.answer(
-            f"Ваш адрес: {user.address}\nВы хотите его использовать?",
-            reply_markup=address_confirm_kb,
+    try:
+        self_pickup = load_sharing_data(callback.from_user.id)
+    except FileNotFoundError:
+        self_pickup = False
+    except Exception as e:
+        logging.error(f"Ошибка при загрузке данных: {e}")
+        self_pickup = False
+    if self_pickup:
+        context = SharedContextUser(session, bot)
+        await context.finish_order(
+            user=callback.from_user,
+            state=state,
+            delivery_address=self_pickup.get("delivery_address"),
         )
-        await state.set_state(OrderState.waiting_for_address)
+        delete_sharing_data(callback.from_user.id)
     else:
-        await callback.message.answer(
-            'Введите адрес доставки или напишите "самовывоз":'
-        )
-        await state.set_state(OrderState.waiting_for_address)
+        if user.address:
+
+            await callback.message.answer(
+                f"Ваш адрес: {user.address}\nВы хотите его использовать?",
+                reply_markup=address_confirm_kb,
+            )
+            await state.set_state(OrderState.waiting_for_address)
+        else:
+            await callback.message.answer("Введите адрес доставки:")
+
+            await state.set_state(OrderState.waiting_for_address)
 
 
 @user_private_router.callback_query(F.data == "change_phone")
@@ -313,7 +393,7 @@ async def process_phone_number(message: types.Message, state: FSMContext):
 
     await state.update_data(phone_number=phone_number)
 
-    await message.answer('Введите адрес доставки или напишите "самовывоз":')
+    await message.answer("Введите адрес доставки:")
     await state.set_state(OrderState.waiting_for_address)
 
 
@@ -325,98 +405,28 @@ async def confirm_address(
     session: AsyncSession,
     bot: Bot,
 ):
-    context = SharedContextUser(session=session, bot=bot)
-    data = await state.get_data()
-    phone_number = data.get("phone_number")
-
     user = await orm_get_user(session, callback.from_user.id)
     delivery_address = user.address
-
-    # Только теперь записываем адрес в state
-    await state.update_data(delivery_address=delivery_address)
-
-    # Создаем заказ
-    new_order = await orm_create_order(
-        session, callback.from_user.id, delivery_address, phone_number
+    context = SharedContextUser(session, bot)
+    await context.finish_order(
+        user=callback.from_user,
+        state=state,
+        delivery_address=delivery_address,
     )
-
-    order_details_dict = await context.order_details_text(order=new_order)
-    order_details_for_buyer = order_details_dict["order_details_for_buyer"]
-
-    await context.send_message_to_deliverers(new_order)
-    await context.send_message_to_admins(new_order)
-    await callback.message.answer(order_details_for_buyer)
-
-    user_id = callback.from_user.id
-    await callback.answer("Спасибо за ваш заказ!")
-    media, reply_markup = await main_menu(
-        session, level=0, menu_name="main", user_id=user_id
-    )
-    # Отправляем главное меню пользователю
-    await callback.message.answer_photo(
-        photo=media.media,  # Изображение из главного меню
-        caption=media.caption,  # Описание из главного меню
-        reply_markup=reply_markup,  # Кнопки из главного меню
-    )
-    await state.clear()
 
 
 @user_private_router.callback_query(F.data == "change_address")
 async def change_address(callback: types.CallbackQuery, state: FSMContext):
-    await callback.message.answer(
-        'Введите новый адрес или напишите "самовывоз"):',
-    )
+    await callback.message.answer('Введите новый адрес"):')
 
 
 @user_private_router.message(OrderState.waiting_for_address)
 async def process_address(
     message: types.Message, state: FSMContext, session: AsyncSession, bot: Bot
 ):
-    user = message.from_user
-    data = await state.get_data()
-    phone_number = data.get("phone_number")
-    user_id = message.from_user.id
-    delivery_address = message.text.strip()
-    context = SharedContextUser(session=session, bot=bot)
-
-    # Записываем адрес в state только после подтверждения или ввода
-    await state.update_data(delivery_address=delivery_address)
-
-    # Обновляем данные пользователя
-    await orm_update_user(
-        session,
-        user_id=user_id,
-        data={  # ✅ Передаём данные в виде словаря
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "phone": phone_number,
-            "address": delivery_address,
-        },
+    context = SharedContextUser(session, bot)
+    await context.finish_order(
+        user=message.from_user,
+        state=state,
+        delivery_address=message.text.strip(),
     )
-
-    # Создаем заказ
-    new_order = await orm_create_order(session, user_id, delivery_address, phone_number)
-
-    order_details_dict = await context.order_details_text(order=new_order)
-    order_details_for_buyer = order_details_dict["order_details_for_buyer"]
-
-    await context.send_message_to_deliverers(new_order.id)
-    await context.send_message_to_admins(new_order.id)
-
-    await message.answer(order_details_for_buyer)
-
-    user_id = message.from_user.id
-    await message.answer("Спасибо за ваш заказ!")
-    # Получаем данные для главного меню
-    media, reply_markup = await main_menu(
-        session, level=0, menu_name="main", user_id=user_id
-    )
-
-    # Отправляем главное меню пользователю
-    await message.answer_photo(
-        photo=media.media,  # Изображение из главного меню
-        caption=media.caption,  # Описание из главного меню
-        reply_markup=reply_markup,  # Кнопки из главного меню
-    )
-
-    await state.clear()
