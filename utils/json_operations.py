@@ -2,16 +2,26 @@ import json
 import hashlib
 import logging
 import random
-from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_query import orm_check_product_available, orm_get_products
 from utils.json_utils import decimal_default, prepare_for_json
-from config import ADMIN_FILE, DELIVERERS_FILE
+from config import ADMIN_FILE
 
 
 def save_admins(admins_list):
+    try:
+        with open(ADMIN_FILE, "r", encoding="utf-8") as file:
+            existing_admins = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        existing_admins = []
+
+    # Добавляем только новые id, которых ещё нет
+    for admin_id in admins_list:
+        if admin_id not in existing_admins:
+            existing_admins.append(admin_id)
+
     with open(ADMIN_FILE, "w", encoding="utf-8") as file:
-        json.dump(admins_list, file, ensure_ascii=False, indent=4)
+        json.dump(existing_admins, file, ensure_ascii=False, indent=4)
 
 
 def save_added_goods(added_good):

@@ -28,7 +28,6 @@ def upgrade() -> None:
     sa.Column('google_map_location', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
-    op.drop_table('Orders')
     op.drop_column('banners', 'created')
     op.drop_column('banners', 'updated')
     op.drop_column('categories', 'created')

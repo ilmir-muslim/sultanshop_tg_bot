@@ -34,7 +34,7 @@ def upgrade() -> None:
     op.create_foreign_key(None, 'order_item', 'products', ['product_id'], ['id'], ondelete='CASCADE')
     op.drop_column('order_item', 'updated')
     op.drop_column('order_item', 'created')
-    op.drop_constraint('Orders_deliverer_id_fkey', 'orders', type_='foreignkey')
+    op.drop_constraint('orders_deliverer_id_fkey', 'orders', type_='foreignkey')
     op.create_foreign_key(None, 'orders', 'deliverers', ['deliverer_id'], ['id'], ondelete='SET NULL')
     op.drop_column('sellers', 'updated')
     op.drop_column('sellers', 'created')

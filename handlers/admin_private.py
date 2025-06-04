@@ -33,7 +33,7 @@ from filters.chat_types import ChatTypeFilter, IsAdmin
 from fixtures.fixtures_utils import dump_fixtures, load_fixtures
 from kbds.inline import get_callback_btns, get_status_keyboard
 from kbds.reply import get_keyboard
-from utils.json_operations import load_sharing_data, save_added_goods
+from utils.json_operations import load_sharing_data, save_added_goods, save_admins
 
 
 admin_router = Router()
@@ -93,6 +93,7 @@ class ProductCard:
 
 @admin_router.message(Command("admin"))
 async def admin_features(message: types.Message):
+    save_admins(message.from_user.id)
     await message.answer("Что хотите сделать?", reply_markup=ADMIN_KB)
 
 

@@ -1,4 +1,5 @@
 import asyncio
+from asyncio.log import logger
 import json
 import logging
 import hashlib
@@ -11,21 +12,17 @@ from aiogram.filters import Command
 from aiogram.filters.callback_data import CallbackData
 from aiogram.utils.deep_linking import create_start_link
 
-
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from config import ADMIN_FILE, GROUPS_FILE
+from config import GROUPS_FILE
 from database.orm_query import orm_get_product_by_name
 from filters.chat_types import ChatTypeFilter
 
-# from common.restricted_words import restricted_words
 from kbds.inline import inline_buttons_kb
 from utils.json_operations import (
     get_and_remove_random_item,
-    save_admins,
     save_callback_data,
 )
-
 
 class BuyCallbackData(CallbackData, prefix="buy"):
     product_hash: str  # MD5 от названия (32 символа)
@@ -36,41 +33,38 @@ class BuyCallbackData(CallbackData, prefix="buy"):
         product_hash = hashlib.md5(product_name.encode()).hexdigest()
         return cls(product_hash=product_hash, product_id=product_id)
 
-
 user_group_router = Router()
-user_group_router.message.filter(ChatTypeFilter(["group", "supergroup"]))
-user_group_router.edited_message.filter(ChatTypeFilter(["group", "supergroup"]))
+user_group_router.message.filter(ChatTypeFilter(["group", "supergroup", "channel"]))
+user_group_router.edited_message.filter(ChatTypeFilter(["group", "supergroup", "channel"]))
+user_group_router.channel_post.filter(ChatTypeFilter(["channel"]))
 
+@user_group_router.channel_post(Command("get_channel_id"))
+async def get_channel_id(message: types.Message):
+    channel_id = message.chat.id
 
-@user_group_router.message(Command("admin"))
-async def get_admins(message: types.Message, bot: Bot):
-    chat_id = message.chat.id
-    admins_list = await bot.get_chat_administrators(chat_id)
+    # Загружаем текущий список id чатов
+    try:
+        with open(GROUPS_FILE, "r", encoding="utf-8") as file:
+            chats = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        chats = []
 
-    # Формируем новый список админов, исключая ботов
-    admins_list = [
-        member.user.id
-        for member in admins_list
-        if member.status in ["creator", "administrator"] and not member.user.is_bot
-    ]
-
-    save_admins(admins_list)
-
-    if os.path.exists(ADMIN_FILE):
-        with open(ADMIN_FILE, "r", encoding="utf-8") as file:
-            bot.my_admins_list = json.load(file)
-
-    if message.from_user.id in bot.my_admins_list:
-        await message.delete()
-
+    # Добавляем id, если его ещё нет
+    if channel_id not in chats:
+        chats.append(channel_id)
+        with open(GROUPS_FILE, "w", encoding="utf-8") as file:
+            json.dump(chats, file, ensure_ascii=False, indent=2)
+        logger.info(f"ID этого канала: {channel_id}\nКанал добавлен в рассылку.")
+    else:
+        logger.info(f"ID этого канала: {channel_id}\nКанал уже есть в рассылке.")
 
 async def send_random_item_periodically(session_maker: async_sessionmaker, bot: Bot):
-    """Отправляет случайные товары в группы только в разрешенное время (9:00-21:00)"""
+    """Отправляет случайные товары в группы и каналы только в разрешенное время (9:00-21:00)"""
     logging.info("Функция send_random_item_periodically запущена")
 
     # Настройки времени работы (9:00 - 21:00)
     START_TIME = time(9, 0)  # 9:00 утра
-    END_TIME = time(21, 0)  # 21:00 вечера
+    END_TIME = time(21, 0)   # 21:00 вечера
     DAY_INTERVAL = 86400
     while True:
         try:
@@ -106,23 +100,23 @@ async def send_random_item_periodically(session_maker: async_sessionmaker, bot: 
                 await asyncio.sleep(seconds_until_morning)
                 continue
 
-            # Загружаем список групп
+            # Загружаем список чатов (группы и каналы)
             try:
                 with open(GROUPS_FILE, "r", encoding="utf-8") as file:
-                    groups = json.load(file)
+                    chats = json.load(file)
             except (FileNotFoundError, json.JSONDecodeError) as e:
                 logging.error(f"Ошибка загрузки groups.json: {e}")
                 await asyncio.sleep(sleep_time)
                 continue
 
-            if not groups:
-                logging.warning("Нет групп для отправки")
+            if not chats:
+                logging.warning("Нет чатов для отправки")
                 await asyncio.sleep(sleep_time)
                 continue
 
             # Отправляем сообщения
             async with session_maker() as session:
-                for chat_id in groups:
+                for chat_id in chats:
                     try:
                         random_item = await get_and_remove_random_item(session)
                         # Проверка обязательных полей
