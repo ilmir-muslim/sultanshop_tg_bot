@@ -1,1 +1,8 @@
-{}
+{
+    "6903748145": {
+        "pickup_point_id": 1,
+        "pickup_point_district": "Зайтун",
+        "pickup_point_address": "5 Nassef",
+        "pickup_point_google_map_location": "https://maps.app.goo.gl/MxmizEN3fNS8AHKXA"
+    }
+}

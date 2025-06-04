@@ -3,8 +3,7 @@ import json
 import logging
 import hashlib
 import os
-from pathlib import Path
-from string import punctuation
+import random
 from datetime import datetime, time
 
 from aiogram import Bot, types, Router
@@ -18,8 +17,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from config import ADMIN_FILE, GROUPS_FILE
 from database.orm_query import orm_get_product_by_name
 from filters.chat_types import ChatTypeFilter
+
 # from common.restricted_words import restricted_words
-from kbds.inline import one_button_kb
+from kbds.inline import inline_buttons_kb
 from utils.json_operations import (
     get_and_remove_random_item,
     save_admins,
@@ -40,8 +40,6 @@ class BuyCallbackData(CallbackData, prefix="buy"):
 user_group_router = Router()
 user_group_router.message.filter(ChatTypeFilter(["group", "supergroup"]))
 user_group_router.edited_message.filter(ChatTypeFilter(["group", "supergroup"]))
-
-
 
 
 @user_group_router.message(Command("admin"))
@@ -71,11 +69,13 @@ async def send_random_item_periodically(session_maker: async_sessionmaker, bot: 
     logging.info("Функция send_random_item_periodically запущена")
 
     # Настройки времени работы (9:00 - 21:00)
-    START_TIME = time(0, 0)  # 9:00 утра
-    END_TIME = time(23, 0)  # 21:00 вечера
-
+    START_TIME = time(9, 0)  # 9:00 утра
+    END_TIME = time(21, 0)  # 21:00 вечера
+    DAY_INTERVAL = 86400
     while True:
         try:
+            random_offset = random.randint(-7200, 7200)  # в секундах (-2ч, +2ч)
+            sleep_time = DAY_INTERVAL + random_offset
             current_time = datetime.now().time()
 
             # Проверяем, находится ли текущее время в разрешенном периоде
@@ -112,12 +112,12 @@ async def send_random_item_periodically(session_maker: async_sessionmaker, bot: 
                     groups = json.load(file)
             except (FileNotFoundError, json.JSONDecodeError) as e:
                 logging.error(f"Ошибка загрузки groups.json: {e}")
-                await asyncio.sleep(3600)
+                await asyncio.sleep(sleep_time)
                 continue
 
             if not groups:
                 logging.warning("Нет групп для отправки")
-                await asyncio.sleep(3600)
+                await asyncio.sleep(sleep_time)
                 continue
 
             # Отправляем сообщения
@@ -152,7 +152,7 @@ async def send_random_item_periodically(session_maker: async_sessionmaker, bot: 
                             bot, f"add_to_cart_{random_item['id']}"
                         )
                         logging.info(f"Сформированная ссылка: {url}")
-                        keyboard = one_button_kb(text="Купить", url=url)
+                        keyboard = inline_buttons_kb({"Купить": {"url": url}})
 
                         await bot.send_photo(
                             chat_id=chat_id,
@@ -167,8 +167,8 @@ async def send_random_item_periodically(session_maker: async_sessionmaker, bot: 
                         logging.error(f"Ошибка отправки в {chat_id}: {e}")
 
             # Пауза между проверками (60 секунд)
-            await asyncio.sleep(3600)
+            await asyncio.sleep(sleep_time)
 
         except Exception as e:
             logging.error(f"Критическая ошибка: {e}")
-            await asyncio.sleep(3600)
+            await asyncio.sleep(sleep_time)

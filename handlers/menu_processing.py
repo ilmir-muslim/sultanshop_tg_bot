@@ -6,11 +6,13 @@ from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.orm_query import (
+    check_delivery_is_available,
     orm_add_to_cart,
     orm_delete_from_cart,
     orm_get_banner,
     orm_get_categories,
     orm_get_delivery_zones,
+    orm_get_pickup_points,
     orm_get_products,
     orm_get_quantity_in_cart,
     orm_get_user_carts,
@@ -24,7 +26,6 @@ from kbds.inline import (
     get_user_cart,
     get_user_catalog_btns,
     get_user_main_btns,
-    one_button_kb,
 )
 
 from utils.json_operations import save_sharing_data
@@ -69,7 +70,13 @@ async def main_menu(session, level, menu_name, user_id=None):
     banner = await orm_get_banner(session, menu_name)
     image = InputMediaPhoto(media=banner.image, caption=banner.description)
     quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
-    kbds = get_user_main_btns(level=level, quantity=quantity)
+    delivery_is_available = await check_delivery_is_available(session)
+
+    kbds = get_user_main_btns(
+        level=level,
+        quantity=quantity,
+        delivery_is_available=delivery_is_available,
+    )
 
     return image, kbds
 
@@ -77,10 +84,15 @@ async def main_menu(session, level, menu_name, user_id=None):
 async def catalog(session, level, menu_name, user_id=None):
     banner = await orm_get_banner(session, menu_name)
     image = InputMediaPhoto(media=banner.image, caption=banner.description)
-
+    delivery_is_available = await check_delivery_is_available(session)
     categories = await orm_get_categories(session)
     quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
-    kbds = get_user_catalog_btns(level=level, categories=categories, quantity=quantity)
+    kbds = get_user_catalog_btns(
+        level=level,
+        categories=categories,
+        quantity=quantity,
+        delivery_is_available=delivery_is_available,
+    )
 
     return image, kbds
 
@@ -98,6 +110,13 @@ def pages(paginator: Paginator):
 
 async def products(session, level, category, page, user_id=None):
     products = await orm_get_products(session, category_id=category)
+    products = [
+        product
+        for product in products
+        if not (
+            product.category.name == "Доставка/Курьер" and product.is_available is False
+        )
+    ]
 
     paginator = Paginator(products, page=page)
     product = paginator.get_page()[0]
@@ -127,54 +146,7 @@ async def products(session, level, category, page, user_id=None):
         is_available=is_available,
     )
 
-    kbds.inline_keyboard.append(
-        [
-            InlineKeyboardButton(
-                text="📋 Показать все",
-                callback_data=f"show_all_in_category_{category}",  # Простая строка с категорией
-            )
-        ]
-    )
     return image, kbds
-
-
-@menu_progressing_router.callback_query(F.data.startswith("show_all_in_category_"))
-async def show_all_products(callback: CallbackQuery, session: AsyncSession):
-    category_id = int(callback.data.split("_")[-1])
-    products = await orm_get_products(session, category_id=category_id)
-    user_id = callback.from_user.id
-    quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
-    for product in products:
-        # Используем get_products_btns для создания клавиатуры
-        reply_markup = get_products_btns(
-            level=2,
-            category=category_id,
-            page=1,
-            pagination_btns={},
-            product_id=product.id,
-            sizes=(2, 1),
-            quantity=quantity,
-            is_available=product.is_available,
-        )
-
-        await callback.message.answer_photo(
-            product.image,
-            caption=f"<strong>{product.name}</strong>\n"
-            f"{product.description}\n"
-            f"Стоимость: {round(product.price, 2)}\n"
-            f"<strong>Категория: {product.category.name}</strong>\n"
-            f"<strong>Продавец: {product.seller.name}</strong>\n",
-            parse_mode="HTML",
-            reply_markup=reply_markup,
-        )
-    await callback.message.answer(
-        'нажмите кнопку "На главную", чтобы вернуться на главную страницу',
-        reply_markup=one_button_kb(
-            text="На главную 🏠",
-            callback_data="main_menu",
-        ),
-    )
-    await callback.answer("Показаны все товары в категории.")
 
 
 async def carts(session, level, menu_name, page, user_id, product_id):
@@ -284,8 +256,13 @@ async def orders(session: AsyncSession, level: int, menu_name: str, user_id: int
 
     # Формируем изображение и кнопки
     image = InputMediaPhoto(media=banner.image, caption=caption, parse_mode="HTML")
+    delivery_is_available = await check_delivery_is_available(session)
     quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
-    kbds = get_user_main_btns(level=level, quantity=quantity)
+    kbds = get_user_main_btns(
+        level=level,
+        quantity=quantity,
+        delivery_is_available=delivery_is_available,
+    )
 
     return image, kbds
 
@@ -297,7 +274,6 @@ async def shipping(session: AsyncSession, level: int, menu_name: str, user_id: i
     caption = banner.description
     # Формируем изображение и кнопки
     image = InputMediaPhoto(media=banner.image, caption=caption, parse_mode="HTML")
-    quantity = await orm_get_quantity_in_cart(session, user_id=user_id)
     delivery_zone = await orm_get_delivery_zones(session)
     btns = {
         delivery_zone.name: f"delivery_zone_{delivery_zone.id}"
@@ -307,6 +283,22 @@ async def shipping(session: AsyncSession, level: int, menu_name: str, user_id: i
     btns["Назад"] = "main_menu"
     btns["Самовывоз"] = "self_pickup"
     kbds = get_callback_btns(btns=btns)
+    return image, kbds
+
+
+async def pickup(session: AsyncSession, level: int, menu_name: str):
+    banner = await orm_get_banner(session, menu_name)
+    caption = banner.description
+    image = InputMediaPhoto(media=banner.image, caption=caption, parse_mode="HTML")
+    pickup_points = await orm_get_pickup_points(session)
+    btns = {
+        point.district: f"pickup_point_{point.id}"
+        for point in pickup_points
+        if point.district
+    }
+    btns["Назад"] = "main_menu"
+    kbds = get_callback_btns(btns=btns)
+
     return image, kbds
 
 
@@ -368,3 +360,5 @@ async def get_menu_content(
         return await orders(session, level, menu_name, user_id)
     elif level == 5:
         return await shipping(session, level, menu_name, user_id)
+    elif level == 6:
+        return await pickup(session, level, menu_name)

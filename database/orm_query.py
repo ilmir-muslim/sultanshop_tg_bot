@@ -13,6 +13,7 @@ from database.models import (
     DelivererReview,
     Orders,
     OrderItem,
+    PickupPoint,
     Product,
     Seller,
     Users,
@@ -124,7 +125,7 @@ async def orm_update_orders_banner_description(session: AsyncSession, user_id: i
         logger.debug(f"DEBUG: {description}")
 
     # Ограничиваем длину текста, если он слишком длинный
-    
+
     if len(description) > 1024:
         description = description[:1020] + "...\n(Слишком много данных для отображения)"
 
@@ -411,16 +412,11 @@ async def orm_get_quantity_in_cart(session: AsyncSession, user_id: int):
 
 
 async def orm_create_order(
-    session: AsyncSession, 
-    user_id: int, 
-    delivery_address: str, 
-    phone_number: str
+    session: AsyncSession, user_id: int, delivery_address: str, phone_number: str
 ) -> Orders:
     # 1. Получаем товары из корзины с загруженными продуктами
     query = (
-        select(Cart)
-        .where(Cart.user_id == user_id)
-        .options(joinedload(Cart.product))
+        select(Cart).where(Cart.user_id == user_id).options(joinedload(Cart.product))
     )
     result = await session.execute(query)
     cart_items = result.scalars().all()
@@ -431,7 +427,7 @@ async def orm_create_order(
     # 2. Считаем общую сумму
     total_price = sum(item.product.price * item.quantity for item in cart_items)
 
-    # 3. Создаём заказ 
+    # 3. Создаём заказ
     new_order = Orders(
         user_id=user_id,
         delivery_address=delivery_address,
@@ -441,18 +437,16 @@ async def orm_create_order(
     session.add(new_order)
     await session.flush()  # Получаем ID заказа
 
-    # 4. Создаём OrderItem 
+    # 4. Создаём OrderItem
     order_item = [
         OrderItem(
-            order_id=new_order.id, 
-            product_id=item.product_id, 
-            quantity=item.quantity
+            order_id=new_order.id, product_id=item.product_id, quantity=item.quantity
         )
         for item in cart_items
     ]
     session.add_all(order_item)
 
-    # 5. Очищаем корзину 
+    # 5. Очищаем корзину
     delete_query = delete(Cart).where(Cart.user_id == user_id)
     await session.execute(delete_query)
 
@@ -462,7 +456,7 @@ async def orm_create_order(
         .where(Orders.id == new_order.id)
         .options(
             selectinload(Orders.user),
-            selectinload(Orders.items).joinedload(OrderItem.product)
+            selectinload(Orders.items).joinedload(OrderItem.product),
         )
     )
     full_order = full_order.scalar_one()
@@ -471,8 +465,9 @@ async def orm_create_order(
     return full_order
 
 
-
-async def orm_get_orders(session: AsyncSession, status: str = None, order_id: int = None):
+async def orm_get_orders(
+    session: AsyncSession, status: str = None, order_id: int = None
+):
     query = select(Orders).options(
         selectinload(Orders.user),
         selectinload(Orders.items).selectinload(OrderItem.product),
@@ -561,9 +556,8 @@ async def orm_get_delivery_zones(session: AsyncSession):
         .join(Product.category)  # Соединяем с таблицей Category
         .where(
             Category.name == "Доставка/Курьер",  # Фильтруем по категории
-            Product.name.like(
-                "Зона доставки %"
-            ),  # Название начинается с "Зона доставки "
+            Product.name.like("Зона доставки %"),
+            Product.is_available == True,
         )
     )
     result = await session.execute(query)
@@ -640,6 +634,58 @@ async def orm_update_deliverer(session: AsyncSession, telegram_id: int, data: di
     query = update(Deliverer).where(Deliverer.telegram_id == telegram_id).values(**data)
     await session.execute(query)
     await session.commit()
+
+
+async def check_delivery_is_available(session: AsyncSession):
+    """
+    Проверяет, есть ли хотя бы один доступный товар в категории "Доставка/Курьер".
+    :param session: Сессия базы данных.
+    :return: True, если есть доступные зоны доставки, иначе False.
+    """
+    query = (
+        select(func.count())
+        .select_from(Product)
+        .join(Product.category)
+        .where(
+            Category.name == "Доставка/Курьер",
+            Product.is_available == True,
+        )
+    )
+    result = await session.execute(query)
+    count = result.scalar()
+    return count > 0
+
+
+async def orm_add_pickup_point(
+    session: AsyncSession, district: str, address: str, google_map_location: str
+):
+    """
+    Добавляет новый пункт выдачи товаров
+    
+    :param session: Сессия базы данных.
+    :param district: район пункта выдачи
+    :param address: адрес
+    :param google_map_location: ссылка на гугл картах
+    """
+    new_pickup_point = PickupPoint(
+        district=district, address=address, google_map_location=google_map_location
+    )
+    session.add(new_pickup_point)
+    await session.commit()
+
+async def orm_get_pickup_points(session: AsyncSession, pickup_point_id: int = None):
+    """
+    Если указан pickup_point_id — возвращает один пункт выдачи (или None).
+    Если не указан — возвращает список всех пунктов выдачи.
+    """
+    query = select(PickupPoint)
+    if pickup_point_id is not None:
+        query = query.where(PickupPoint.id == pickup_point_id)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+    else:
+        result = await session.execute(query)
+        return result.scalars().all()
 
 
 ############ работа с отзывами #######################################

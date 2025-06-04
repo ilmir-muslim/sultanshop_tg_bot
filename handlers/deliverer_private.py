@@ -15,7 +15,7 @@ from database.orm_query import (
     orm_update_review,
 )
 from filters.chat_types import ChatTypeFilter
-from kbds.inline import one_button_kb
+from kbds.inline import inline_buttons_kb
 from kbds.reply import get_keyboard
 
 
@@ -45,6 +45,7 @@ class SharedContextDeliverer:
             "список активных заказов",
             "принимаю заказы" if not is_active else "не принимаю заказы",
         )
+
     async def send_active_orders(self, message: types.Message):
         """
         Отправляет список активных заказов в личные сообщения доставщику.
@@ -55,7 +56,7 @@ class SharedContextDeliverer:
             return
 
         for order in orders:
-            if not order.delivery_address == "самовывоз":
+            if not order.delivery_address.lower() == "самовывоз":
                 await message.answer(
                     f"📦 Заказ №{order.id}\n"
                     f"👤 Покупатель: {order.user.first_name} {order.user.last_name}\n"
@@ -64,11 +65,11 @@ class SharedContextDeliverer:
                     f"💰 Общая стоимость: {order.total_price} £.\n"
                     f"📋 Статус: {order.status}\n"
                     f"🕒 Дата создания: {order.created.strftime('%d.%m.%Y %H:%M')}\n",
-                    reply_markup=one_button_kb(
-                        text=f"принять заказ",
-                        callback_data=f"accept_order_{order.id}",
+                    reply_markup=inline_buttons_kb(
+                        {"принять заказ": {"callback_data": f"accept_order_{order.id}"}}
                     ),
                 )
+
 
 @deliverer_private_router.message(Command("deliverer"))
 async def delivery_command(
@@ -132,7 +133,6 @@ async def active_orders(message: types.Message, session: AsyncSession):
     """
     context = SharedContextDeliverer(session)
     await context.send_active_orders(message)
-    
 
 
 @deliverer_private_router.message(F.text.in_(["принимаю заказы", "не принимаю заказы"]))
@@ -184,9 +184,12 @@ async def accept_order(callback: types.CallbackQuery, session: AsyncSession, bot
     await orm_update_order(session, order_id, data_for_update)
     await callback.message.answer(
         f'Вы приняли заказ №{order_id}, нажмите кнопку "я выполнил заказ", когда совершите доставку',
-        reply_markup=one_button_kb(
-            text="я выполнил заказ",
-            callback_data=f"complete_order_{order_id}",
+        reply_markup=inline_buttons_kb(
+            {
+                "я выполнил заказ": {
+                    "callback_data": f"complete_order_{order_id}",
+                }
+            }
         ),
     )
 

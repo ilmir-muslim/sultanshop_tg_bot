@@ -14,17 +14,13 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
-    created: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
-    updated: Mapped[DateTime] = mapped_column(
-        DateTime, default=func.now(), onupdate=func.now()
-    )
 
     def to_dict(self):
         return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
 
 
 class Banner(Base):
-    __tablename__ = "banner"
+    __tablename__ = "banners"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(15), unique=True)
@@ -33,14 +29,14 @@ class Banner(Base):
 
 
 class Category(Base):
-    __tablename__ = "category"
+    __tablename__ = "categories"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
 
 
 class Product(Base):
-    __tablename__ = "product"
+    __tablename__ = "products"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
@@ -49,16 +45,20 @@ class Product(Base):
     price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     image: Mapped[str] = mapped_column(String(150))
     category_id: Mapped[int] = mapped_column(
-        ForeignKey("category.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("categories.id", ondelete="CASCADE"), nullable=False
     )
     seller_id: Mapped[int] = mapped_column(
         ForeignKey("sellers.id", ondelete="CASCADE"), nullable=False, default=1
     )
     is_available: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+    updated: Mapped[DateTime] = mapped_column(
+        DateTime, default=func.now(), onupdate=func.now()
+    )
 
-    category: Mapped["Category"] = relationship(backref="product")
+    category: Mapped["Category"] = relationship(backref="products")
     order_item: Mapped[list["OrderItem"]] = relationship(back_populates="product")
-    seller: Mapped["Seller"] = relationship(backref="product")
+    seller: Mapped["Seller"] = relationship(backref="products")
 
 
 class Users(Base):
@@ -83,19 +83,23 @@ class Seller(Base):
 
 
 class Cart(Base):
-    __tablename__ = "cart"
+    __tablename__ = "carts"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
     )
     product_id: Mapped[int] = mapped_column(
-        ForeignKey("product.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("products.id", ondelete="CASCADE"), nullable=False
     )
-    quantity: Mapped[int]
+    quantity: Mapped[int] = mapped_column(nullable=False)
+    created: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+    updated: Mapped[DateTime] = mapped_column(
+        DateTime, default=func.now(), onupdate=func.now()
+    )
 
-    user: Mapped["Users"] = relationship(backref="cart")
-    product: Mapped["Product"] = relationship(backref="cart")
+    user: Mapped["Users"] = relationship(backref="carts")
+    product: Mapped["Product"] = relationship(backref="carts")
 
 
 class WaitList(Base):
@@ -106,7 +110,7 @@ class WaitList(Base):
         ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
     )
     product_id: Mapped[int] = mapped_column(
-        ForeignKey("product.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("products.id", ondelete="CASCADE"), nullable=False
     )
 
     user: Mapped["Users"] = relationship(backref="wait_list")
@@ -124,15 +128,19 @@ class Orders(Base):
     total_price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     status: Mapped[str] = mapped_column(String(150))
     deliverer_id: Mapped[int] = mapped_column(  # Переименовано
-        ForeignKey("deliverer.id", ondelete="SET NULL"), nullable=True
+        ForeignKey("deliverers.id", ondelete="SET NULL"), nullable=True
+    )
+    created: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+    updated: Mapped[DateTime] = mapped_column(
+        DateTime, default=func.now(), onupdate=func.now()
     )
 
-    user: Mapped["Users"] = relationship(backref="Orders")
+    user: Mapped["Users"] = relationship(backref="orders")
     items: Mapped[list["OrderItem"]] = relationship(
         back_populates="order", cascade="all, delete-orphan"
     )
     deliverer: Mapped["Deliverer"] = relationship(
-        backref="Orders", foreign_keys=[deliverer_id]
+        backref="orders", foreign_keys=[deliverer_id]
     )
 
 
@@ -144,7 +152,7 @@ class OrderItem(Base):
         ForeignKey("orders.id", ondelete="CASCADE"), nullable=False
     )
     product_id: Mapped[int] = mapped_column(
-        ForeignKey("product.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("products.id", ondelete="CASCADE"), nullable=False
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
@@ -154,7 +162,7 @@ class OrderItem(Base):
 
 
 class Deliverer(Base):
-    __tablename__ = "deliverer"
+    __tablename__ = "deliverers"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True)
@@ -173,7 +181,7 @@ class DelivererReview(Base):
         ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
     )
     deliverer_id: Mapped[int] = mapped_column(
-        ForeignKey("deliverer.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("deliverers.id", ondelete="CASCADE"), nullable=False
     )
     rating: Mapped[int] = mapped_column(Integer, nullable=False)
     rating_summary: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
@@ -187,11 +195,21 @@ class FeedbackBook(Base):
     __tablename__ = "feedback_book"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-
     user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.user_id", ondelete="SET NULL"), nullable=True
     )
-
     text: Mapped[str] = mapped_column(Text, nullable=False)
+    created: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+    updated: Mapped[DateTime] = mapped_column(
+        DateTime, default=func.now(), onupdate=func.now()
+    )
 
     user: Mapped["Users"] = relationship(backref="feedback_book", uselist=False)
+
+class PickupPoint(Base):
+    __tablename__ = "pickup_points"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    district: Mapped[str] = mapped_column(Text, nullable=True)
+    address: Mapped[str] = mapped_column(Text, nullable=True)
+    google_map_location: Mapped[str] = mapped_column(Text, nullable=True)

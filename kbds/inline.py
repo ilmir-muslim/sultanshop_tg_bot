@@ -1,9 +1,10 @@
-from aiogram.filters import callback_data
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from filters.callback_filters import StatusCallback
+from database.orm_query import check_delivery_is_available
 
 
 class MenuCallBack(CallbackData, prefix="menu"):
@@ -27,15 +28,24 @@ class plural_goods:
             return "товаров"
 
 
-def get_user_main_btns(*, level: int, sizes: tuple[int] = (2,), quantity: int = 0):
+def get_user_main_btns(
+    *,
+    level: int,
+    sizes: tuple[int] = (2,),
+    quantity: int = 0,
+    delivery_is_available: bool,
+):
     keyboard = InlineKeyboardBuilder()
+
     btns = {
         "Товары 🏪": ("catalog", 1),
         "Корзина 🛒" if quantity == 0 else f"Корзина 🛒 {quantity}": ("cart", 3),
         "О нас ℹ️": ("about", level),
         "Мои заказы 📦": ("orders", 4),
-        "Доставка/Курьер 🛵": ("shipping", 5),
     }
+    # Добавляем кнопку только если доставка доступна
+    if delivery_is_available:
+        btns["Доставка/Курьер 🛵"] = ("shipping", 5)
 
     for text, (menu_name, target_level) in btns.items():
         keyboard.add(
@@ -51,7 +61,12 @@ def get_user_main_btns(*, level: int, sizes: tuple[int] = (2,), quantity: int = 
 
 
 def get_user_catalog_btns(
-    *, level: int, categories: list, sizes: tuple[int] = (2,), quantity: int = 0
+    *,
+    level: int,
+    categories: list,
+    sizes: tuple[int] = (2,),
+    quantity: int = 0,
+    delivery_is_available: bool,
 ):
     keyboard = InlineKeyboardBuilder()
 
@@ -73,6 +88,8 @@ def get_user_catalog_btns(
     )
 
     for c in categories:
+        if c.name == "Доставка/Курьер" and not delivery_is_available:
+            continue
         keyboard.add(
             InlineKeyboardButton(
                 text=c.name,
@@ -282,14 +299,20 @@ def get_status_keyboard():
     )
 
 
-def one_button_kb(text: str, **kwargs):
+def inline_buttons_kb(btns: dict[str, dict]) -> InlineKeyboardMarkup:
+    """
+    Создаёт клавиатуру из словаря вида:
+    {
+        "Текст кнопки 1": {"callback_data": "data1"},
+        "Текст кнопки 2": {"url": "https://example.com"},
+        ...
+    }
+    """
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(
-                    text=text, **kwargs  # Передаем дополнительные аргументы
-                )
-            ]
+                InlineKeyboardButton(text=text, **params)
+            ] for text, params in btns.items()
         ]
     )
 

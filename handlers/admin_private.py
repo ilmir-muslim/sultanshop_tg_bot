@@ -1,5 +1,5 @@
 import logging
-from aiogram import F, Router, types
+from aiogram import F, Bot, Router, types
 from aiogram.dispatcher import router
 from aiogram.filters import Command, StateFilter, or_f
 from aiogram.fsm.context import FSMContext
@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import Category, Seller
 from database.orm_query import (
     orm_add_category,
+    orm_add_pickup_point,
     orm_add_seller,
     orm_change_banner_image,
     orm_get_categories,
@@ -20,6 +21,7 @@ from database.orm_query import (
     orm_get_product,
     orm_get_products,
     orm_get_sellers,
+    orm_update_order,
     orm_update_product,
     orm_update_product_availability,
 )
@@ -31,7 +33,7 @@ from filters.chat_types import ChatTypeFilter, IsAdmin
 from fixtures.fixtures_utils import dump_fixtures, load_fixtures
 from kbds.inline import get_callback_btns, get_status_keyboard
 from kbds.reply import get_keyboard
-from utils.json_operations import save_added_goods
+from utils.json_operations import load_sharing_data, save_added_goods
 
 
 admin_router = Router()
@@ -43,24 +45,10 @@ ADMIN_KB = get_keyboard(
     "Ассортимент",
     "Добавить/Изменить баннер",
     "Заказы",
+    "Добавить пункт выдачи",
     placeholder="Выберите действие",
     sizes=(2,),
 )
-
-
-@admin_router.message(Command("admin"))
-async def admin_features(message: types.Message):
-    await message.answer("Что хотите сделать?", reply_markup=ADMIN_KB)
-
-
-@admin_router.message(F.text == "Ассортимент")
-async def admin_features(message: types.Message, session: AsyncSession):
-    categories = await orm_get_categories(session)
-    btns = {category.name: f"category_{category.id}" for category in categories}
-    btns["показать все товары"] = "show_all_products"
-    await message.answer(
-        "Выберите категорию", reply_markup=get_callback_btns(btns=btns)
-    )
 
 
 class ProductCard:
@@ -98,6 +86,43 @@ class ProductCard:
             "Изменить": f"change_{self.product.id}",
             availability_text: availability_callback,
         }
+
+
+######################### Обработка команд #####################################
+
+
+@admin_router.message(Command("admin"))
+async def admin_features(message: types.Message):
+    await message.answer("Что хотите сделать?", reply_markup=ADMIN_KB)
+
+
+@admin_router.message(Command("dumpfix"))
+async def dump_fixtures_handler(message: types.Message, session: AsyncSession):
+    """
+    Команда для создания фикстур в базе данных.
+    """
+    await dump_fixtures(session)
+    await message.answer("Фикстуры успешно созданы.")
+
+
+@admin_router.message(Command("loadfix"))
+async def load_fixtures_handler(message: types.Message, session: AsyncSession):
+    """
+    Команда для загрузки фикстур в базу данных.
+    """
+    await load_fixtures(session)
+    await message.answer("Фикстуры успешно загружены.")
+
+
+################## вывод всего ассортимента товаров #########################
+@admin_router.message(F.text == "Ассортимент")
+async def admin_features(message: types.Message, session: AsyncSession):
+    categories = await orm_get_categories(session)
+    btns = {category.name: f"category_{category.id}" for category in categories}
+    btns["показать все товары"] = "show_all_products"
+    await message.answer(
+        "Выберите категорию", reply_markup=get_callback_btns(btns=btns)
+    )
 
 
 @admin_router.callback_query(F.data == "show_all_products")
@@ -226,9 +251,6 @@ async def add_banner(message: types.Message, state: FSMContext, session: AsyncSe
 @admin_router.message(AddBanner.image)
 async def add_banner2(message: types.Message, state: FSMContext):
     await message.answer("Отправьте фото баннера или отмена")
-
-
-#########################################################################################
 
 
 ######################### FSM для дабавления/изменения товаров админом ###################
@@ -656,6 +678,7 @@ async def add_image2(message: types.Message, state: FSMContext):
     await message.answer("Отправьте фото пищи")
 
 
+################### Работа с заказами ####################
 @admin_router.message(F.text == "Заказы")
 async def orders(message: types.Message):
     await message.answer(
@@ -685,22 +708,62 @@ async def handle_status_callback(
     await callback.answer()
 
 
-######## Работа с фикстурами ##########
+#################### Добавление пунктов выдачи товаров #########################
 
 
-@admin_router.message(Command("dumpfix"))
-async def dump_fixtures_handler(message: types.Message, session: AsyncSession):
-    """
-    Команда для создания фикстур в базе данных.
-    """
-    await dump_fixtures(session)
-    await message.answer("Фикстуры успешно созданы.")
+@admin_router.message(F.text == "Добавить пункт выдачи")
+async def add_pickup_point(message: types.Message, session: AsyncSession):
+    await message.answer(
+        'Введите название района, адрес и ссылку на локацию в гугл картах через запятую пример: "Зайтун, 5 Nassef, https://maps.app.goo.gl/MxmizEN3fNS8AHKXA"'
+    )
 
 
-@admin_router.message(Command("loadfix"))
-async def load_fixtures_handler(message: types.Message, session: AsyncSession):
+@admin_router.message(F.text.regexp(r"^[^,]+,[^,]+,.*$"))
+async def process_pickup_point_input(message: types.Message, session: AsyncSession):
     """
-    Команда для загрузки фикстур в базу данных.
+    Обрабатывает ввод данных для нового пункта выдачи.
+    Ожидается: район, адрес, ссылка на гугл-картах через запятую.
     """
-    await load_fixtures(session)
-    await message.answer("Фикстуры успешно загружены.")
+    parts = [part.strip() for part in message.text.split(",", 2)]
+    if len(parts) < 3:
+        await message.answer(
+            "Пожалуйста, введите все три значения через запятую: район, адрес, ссылка."
+        )
+        return
+
+    district, address, google_map_location = parts
+
+    await orm_add_pickup_point(
+        session,
+        district,
+        address,
+        google_map_location,
+    )
+    await message.answer("Пункт выдачи успешно добавлен!")
+
+@admin_router.callback_query(F.data.startswith("admin_accept_order_"))
+async def admin_accept_order(callback: types.CallbackQuery, session: AsyncSession, bot: Bot):
+    order_id = int(callback.data.split("_")[-1])
+    order = await orm_get_orders(session, order_id=order_id)
+    data_for_update = {
+        "status": "В работе",
+    }
+
+    # Загружаем данные о пункте выдачи из файла
+    pickup_data = load_sharing_data(order.user_id)
+    pickup_info = ""
+    if pickup_data:
+        pickup_info = (
+            f"🏬 <b>Пункт выдачи:</b> {pickup_data.get('pickup_point_district', '')}, {pickup_data.get('pickup_point_address', '')}\n"
+            f"🌍 <b>Google карты:</b> {pickup_data.get('pickup_point_google_map_location', '')}\n"
+        )
+
+    await bot.send_message(
+        order.user_id,
+        f"✅ Ваш заказ №{order.id} принят в работу!\n\n"
+        f"{pickup_info}\n\n"
+        "Когда товар будет доставлен в пункт выдачи, с вами свяжется оператор.\n"
+        "Спасибо за заказ!",
+        parse_mode="HTML"
+    )
+    await orm_update_order(session, order_id, data_for_update)
