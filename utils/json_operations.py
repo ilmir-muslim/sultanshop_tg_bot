@@ -15,7 +15,8 @@ def save_admins(admins_list):
     except (FileNotFoundError, json.JSONDecodeError):
         existing_admins = []
 
-    # Добавляем только новые id, которых ещё нет
+    if isinstance(admins_list, int):
+        admins_list = [admins_list]
     for admin_id in admins_list:
         if admin_id not in existing_admins:
             existing_admins.append(admin_id)

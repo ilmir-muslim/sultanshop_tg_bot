@@ -1,19 +1,13 @@
 import json
 import datetime
-import decimal
-
-from datetime import datetime, date
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Base
+from utils.serializer import custom_serializer
 
 
-def custom_serializer(obj):
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    if isinstance(obj, decimal.Decimal):
-        return float(obj)
-    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
 
 
 async def dump_fixtures(session: AsyncSession, output_file="fixtures/fixtures.json"):

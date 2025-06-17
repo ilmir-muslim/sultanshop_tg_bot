@@ -34,6 +34,8 @@ from fixtures.fixtures_utils import dump_fixtures, load_fixtures
 from kbds.inline import get_callback_btns, get_status_keyboard
 from kbds.reply import get_keyboard
 from utils.json_operations import load_sharing_data, save_added_goods, save_admins
+from utils.send_message_ustils import send_product_message
+from utils.serializer import custom_serializer
 
 
 admin_router = Router()
@@ -85,6 +87,7 @@ class ProductCard:
             "Удалить": f"delete_{self.product.id}",
             "Изменить": f"change_{self.product.id}",
             availability_text: availability_callback,
+            "Опубликовать": f"send_to_group_{self.product.id}",
         }
 
 
@@ -742,8 +745,11 @@ async def process_pickup_point_input(message: types.Message, session: AsyncSessi
     )
     await message.answer("Пункт выдачи успешно добавлен!")
 
+
 @admin_router.callback_query(F.data.startswith("admin_accept_order_"))
-async def admin_accept_order(callback: types.CallbackQuery, session: AsyncSession, bot: Bot):
+async def admin_accept_order(
+    callback: types.CallbackQuery, session: AsyncSession, bot: Bot
+):
     order_id = int(callback.data.split("_")[-1])
     order = await orm_get_orders(session, order_id=order_id)
     data_for_update = {
@@ -765,6 +771,21 @@ async def admin_accept_order(callback: types.CallbackQuery, session: AsyncSessio
         f"{pickup_info}\n\n"
         "Когда товар будет доставлен в пункт выдачи, с вами свяжется оператор.\n"
         "Спасибо за заказ!",
-        parse_mode="HTML"
+        parse_mode="HTML",
     )
     await orm_update_order(session, order_id, data_for_update)
+
+
+@admin_router.callback_query(F.data.startswith("send_to_group_"))
+async def send_product_to_group(
+    callback: types.CallbackQuery, session: AsyncSession, bot: Bot
+):
+    product_id = int(callback.data.split("_")[-1])
+    product_data = await orm_get_product(session, product_id)
+    product_dict = {
+        "name": product_data.name,
+        "description": product_data.description,
+        "price": custom_serializer(product_data.price),
+        "image": product_data.image, 
+    }
+    await send_product_message(session, bot, product_dict)

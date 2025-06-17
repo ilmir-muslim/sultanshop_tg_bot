@@ -15,7 +15,7 @@ load_dotenv(find_dotenv())
 from config import ADMIN_FILE
 from middlewares.db import DataBaseSession
 
-from database.engine import create_db, drop_db, session_maker
+from database.engine import create_db, session_maker
 
 from handlers.user_private import user_private_router
 from handlers.user_group import send_random_item_periodically, user_group_router

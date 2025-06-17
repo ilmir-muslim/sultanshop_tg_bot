@@ -69,7 +69,7 @@ def get_user_catalog_btns(
     delivery_is_available: bool,
 ):
     keyboard = InlineKeyboardBuilder()
-
+    
     keyboard.add(
         InlineKeyboardButton(
             text="Назад",
